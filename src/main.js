@@ -6,7 +6,7 @@ import { TEMPLATES } from './templates.js';
 import {
   store, subscribe, createNew, loadById, listFichas, saveNow, commit,
   duplicateCurrent, newVersionCurrent, addImageFromFile, imageUrl, setCurrent,
-  getMode, setBackendMode,
+  getMode, setBackendMode, nextFichaNumber,
 } from './store.js';
 import * as cloud from './cloud.js';
 import { renderPage } from './ficha.js';
@@ -84,7 +84,7 @@ function openTemplatePicker() {
   for (const tpl of TEMPLATES) {
     const card = el('button', { class: 'btn ghost', style: { height: 'auto', padding: '16px 10px', flexDirection: 'column', gap: '6px', fontSize: '13px' } },
       el('div', { style: { fontSize: '26px' } }, tpl.icon), el('div', { text: tpl.nome }));
-    card.onclick = async () => { m.close(); await createNew(tpl.build()); switchView('editor'); toast(`Nova ficha: ${tpl.nome}`, 'ok'); };
+    card.onclick = async () => { m.close(); const fic = tpl.build(); fic.meta.numero = await nextFichaNumber(); await createNew(fic); switchView('editor'); toast(`Nova ficha Nº ${fic.meta.numero}: ${tpl.nome}`, 'ok'); };
     grid.append(card);
   }
   const m = modal({ title: 'Nova ficha — escolha um modelo', body: grid, width: '520px' });

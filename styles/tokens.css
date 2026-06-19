@@ -21,6 +21,9 @@
 
   /* Papel (a ficha) */
   --paper: #ffffff;
+  /* fundo "imagem" (gradiente branco): o dark mode forçado do navegador NÃO
+     inverte gradientes/imagens, só cores sólidas — mantém a folha branca. */
+  --paper-fill: linear-gradient(#ffffff, #ffffff);
   --paper-text: #1a1a1a;
   --paper-line: #d4d4d8;
   --paper-line-strong: #1a1a1a;

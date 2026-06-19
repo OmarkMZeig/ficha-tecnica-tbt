@@ -44,6 +44,7 @@ function headerBlock(f) {
       el('div', { class: 'ttl' }, 'FICHA TÉCNICA DE PRODUÇÃO'),
       el('div', { class: 'sub two' }, el('span', { class: 'sk' }, 'Coleção'), ed(m, 'colecao', 'Coleção / Estação'))),
     el('div', { class: 'spacer' }),
+    el('div', { class: 'fic-num' }, el('span', { class: 'sk' }, 'Ficha Nº'), ed(m, 'numero', '0000', 'sv inline')),
     el('div', { class: 'ver-badge' }, 'v', ed(m, 'versao', '1.0', 'sv inline')),
   );
 

@@ -26,7 +26,19 @@
   section, .tbl-wrap, .sign-row { break-inside: avoid; }
   /* Pagina 1 = cabecalho + desenho + medidas; o resto comeca na pagina 2 */
   .measures-section { break-after: page; page-break-after: always; }
+
+  /* Impressao em lote (varias fichas): esconde o app, imprime so o #printRoot */
+  body.multi-print #app { display: none !important; }
+  body.multi-print #printRoot { position: static !important; left: auto !important; }
+  body.multi-print #printRoot .page {
+    position: relative !important; left: auto !important; top: auto !important;
+    transform: none !important; box-shadow: none !important; margin: 0 auto;
+    break-after: page; page-break-after: always;
+  }
 }
+
+/* #printRoot fica fora da tela ate a impressao (evita "piscar" o conteudo) */
+#printRoot { position: fixed; left: -10000px; top: 0; }
 
 /* Modo "exportar imagem": classe aplicada ao body temporariamente */
 body.exporting .topbar, body.exporting .tools, body.exporting .inspector,

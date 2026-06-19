@@ -101,6 +101,17 @@ export async function loadById(id) {
 }
 
 export function setCurrent(f) { current = f; emit('load'); }
+export function setCurrentSilent(f) { current = f; }
+export const hydrate = (f) => backend.hydrate(f);
+
+/** Carrega + hidrata uma ficha SEM mexer na ficha atual (usado p/ impressão em lote). */
+export async function fetchFicha(id) {
+  const f = await backend.get(id);
+  if (!f) return null;
+  ensureShape(f);
+  await backend.hydrate(f);
+  return f;
+}
 
 export async function duplicateCurrent() {
   if (!current) return null;
@@ -111,6 +122,7 @@ export async function duplicateCurrent() {
   copy.revisoes = [];
   copy.createdAt = new Date().toISOString();
   copy.updatedAt = copy.createdAt;
+  copy.meta.numero = await nextFichaNumber();
   current = copy;
   await backend.save(current);
   emit('load');
@@ -126,6 +138,14 @@ export async function newVersionCurrent(note = '') {
   await saveNow();
   emit('load');
   return current;
+}
+
+// Numeração automática de ficha (contador local sequencial, zero à esquerda).
+export async function nextFichaNumber() {
+  let n = (await db.getMeta('fichaSeq')) || 0;
+  n += 1;
+  await db.setMeta('fichaSeq', n);
+  return String(n).padStart(4, '0');
 }
 
 export async function removeFicha(id) { await backend.remove(id); if (current && current.id === id) current = null; }

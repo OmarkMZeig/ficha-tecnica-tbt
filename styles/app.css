@@ -145,8 +145,10 @@ body { background: var(--bg-app); color: var(--text); overflow: hidden; }
 .library .filters { display: flex; gap: 8px; }
 .library .filters select { height: 40px; padding: 0 10px; border-radius: var(--r-md); background: var(--bg-panel); border: 1px solid var(--border); color: var(--text); }
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--sp-4); max-width: 1100px; margin-inline: auto; }
-.card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; cursor: pointer; transition: border-color .12s, transform .12s; }
+.card { position: relative; background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; cursor: pointer; transition: border-color .12s, transform .12s; }
 .card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.card.sel { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+.card .card-chk { position: absolute; top: 8px; left: 8px; z-index: 3; width: 20px; height: 20px; cursor: pointer; accent-color: var(--accent); }
 .card .thumb { height: 150px; background: #fff center/contain no-repeat; border-bottom: 1px solid var(--border); display: grid; place-items: center; color: #bbb; }
 .card .meta { padding: var(--sp-3); }
 .card .meta .r { font-weight: 600; font-size: 13px; }

@@ -35,45 +35,26 @@ const custosBase = rows('custos', [
 const tecidoJeans = rows('materiais', [{ tecido: 'Jeans (índigo)', composicao: '98% Algodão 2% Elastano', gramatura: '11 oz', consumo: '1,40 m' }]);
 const tecidoSarja = rows('materiais', [{ tecido: 'Sarja', composicao: '97% Algodão 3% Elastano', gramatura: '240 g/m²', consumo: '1,40 m' }]);
 
-const jeansSpecs = {
-  tecido: '', linha: 'Fio 36 simples', cartela: '',
-  pesponto1: 'Grafite', pesponto2: 'Grafite', travetes: 'Grafite', caseados: 'Grafite',
-};
-
+// Templates de categoria: trazem APENAS a estrutura (categoria, grade de
+// tamanhos, linhas de medida). Sem aviamentos/materiais/custos/specs/observações
+// pré-preenchidos — o usuário preenche.
 function baseJeans(over = {}) {
   return newFicha({
     meta: { categoria: 'Calça Jeans', tipoProduto: 'Calça', grupo: 'Jeans' },
-    specs: jeansSpecs,
     grade: { sizes: [...sizes6], qtd: sizes6.map(() => '') },
     medidas: emptyMedidas(JEANS_MEASURES),
-    tables: { aviamentos: aviCalca, materiais: tecidoJeans, custos: custosBase },
-    observacoes: 'Lavagem conforme padrão aprovado. Conferir simetria de bolsos e bordado traseiro. Pesponto 2 agulhas bitola 1/8.',
     ...over,
   });
 }
 
 export const TEMPLATES = [
-  { id: 'tpl-calca-jeans', nome: 'Calça Jeans', icon: '👖', build: () => baseJeans({ meta: { categoria: 'Calça Jeans', produto: 'Calça Jeans', tipoProduto: 'Calça', grupo: 'Jeans' } }) },
-  { id: 'tpl-calca-sarja', nome: 'Calça Sarja', icon: '👖', build: () => baseJeans({ meta: { categoria: 'Calça Sarja', produto: 'Calça Sarja', tipoProduto: 'Calça', grupo: 'Sarja' }, tables: { aviamentos: aviCalca, materiais: tecidoSarja, custos: custosBase } }) },
-  { id: 'tpl-bermuda-jeans', nome: 'Bermuda Jeans', icon: '🩳', build: () => baseJeans({ meta: { categoria: 'Bermuda Jeans', produto: 'Bermuda Jeans', tipoProduto: 'Bermuda', grupo: 'Jeans' } }) },
-  { id: 'tpl-bermuda-sarja', nome: 'Bermuda Sarja', icon: '🩳', build: () => baseJeans({ meta: { categoria: 'Bermuda Sarja', produto: 'Bermuda Sarja', tipoProduto: 'Bermuda', grupo: 'Sarja' }, tables: { aviamentos: aviCalca, materiais: tecidoSarja, custos: custosBase } }) },
-  {
-    id: 'tpl-jaqueta', nome: 'Jaqueta Jeans', icon: '🧥', build: () => newFicha({
-      meta: { categoria: 'Jaqueta Jeans', produto: 'Jaqueta Jeans', tipoProduto: 'Jaqueta', grupo: 'Jeans' },
-      specs: jeansSpecs, grade: { sizes: [...sizesLetter], qtd: sizesLetter.map(() => '') },
-      medidas: emptyMedidas(['Tórax', 'Cintura', 'Comprimento', 'Ombro', 'Manga']),
-      tables: { aviamentos: aviCalca, materiais: tecidoJeans, custos: custosBase },
-    }),
-  },
-  {
-    id: 'tpl-camisa', nome: 'Camisa', icon: '👔', build: () => newFicha({
-      meta: { categoria: 'Camisa', produto: 'Camisa Manga Longa', tipoProduto: 'Camisa' },
-      grade: { sizes: [...sizesLetter], qtd: sizesLetter.map(() => '') },
-      medidas: emptyMedidas(['Tórax', 'Cintura', 'Comprimento', 'Ombro', 'Manga', 'Colarinho']),
-      tables: { aviamentos: rows('aviamentos', [{ descricao: 'Botão poliéster 4 furos', qtd: '9' }, { descricao: 'Entretela colarinho/punho' }, { descricao: 'Etiqueta de marca', qtd: '1' }]), materiais: rows('materiais', [{ tecido: 'Tricoline', composicao: '100% Algodão', gramatura: '120 g/m²', consumo: '1,60 m' }]), custos: custosBase },
-    }),
-  },
-  { id: 'tpl-private', nome: 'Private Label', icon: '🏷️', build: () => baseJeans({ meta: { categoria: 'Private Label', produto: '' }, observacoes: '' }) },
+  { id: 'tpl-calca-jeans', nome: 'Calça Jeans', icon: '👖', build: () => baseJeans({ meta: { categoria: 'Calça Jeans', tipoProduto: 'Calça', grupo: 'Jeans' } }) },
+  { id: 'tpl-calca-sarja', nome: 'Calça Sarja', icon: '👖', build: () => baseJeans({ meta: { categoria: 'Calça Sarja', tipoProduto: 'Calça', grupo: 'Sarja' } }) },
+  { id: 'tpl-bermuda-jeans', nome: 'Bermuda Jeans', icon: '🩳', build: () => baseJeans({ meta: { categoria: 'Bermuda Jeans', tipoProduto: 'Bermuda', grupo: 'Jeans' } }) },
+  { id: 'tpl-bermuda-sarja', nome: 'Bermuda Sarja', icon: '🩳', build: () => baseJeans({ meta: { categoria: 'Bermuda Sarja', tipoProduto: 'Bermuda', grupo: 'Sarja' } }) },
+  { id: 'tpl-jaqueta', nome: 'Jaqueta Jeans', icon: '🧥', build: () => newFicha({ meta: { categoria: 'Jaqueta Jeans', tipoProduto: 'Jaqueta', grupo: 'Jeans' }, grade: { sizes: [...sizesLetter], qtd: sizesLetter.map(() => '') }, medidas: emptyMedidas(['Tórax', 'Cintura', 'Comprimento', 'Ombro', 'Manga']) }) },
+  { id: 'tpl-camisa', nome: 'Camisa', icon: '👔', build: () => newFicha({ meta: { categoria: 'Camisa', tipoProduto: 'Camisa' }, grade: { sizes: [...sizesLetter], qtd: sizesLetter.map(() => '') }, medidas: emptyMedidas(['Tórax', 'Cintura', 'Comprimento', 'Ombro', 'Manga', 'Colarinho']) }) },
+  { id: 'tpl-private', nome: 'Private Label', icon: '🏷️', build: () => baseJeans({ meta: { categoria: 'Private Label' } }) },
   { id: 'tpl-blank', nome: 'Em branco', icon: '📄', build: () => newFicha() },
   { id: 'tpl-exemplo', nome: '★ Exemplo preenchido', icon: '⭐', build: buildExemplo },
 ];

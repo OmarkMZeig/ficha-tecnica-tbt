@@ -412,6 +412,18 @@ export function updateSelected(patch) {
   touch();
 }
 
+// Renderiza os objetos de uma ficha (somente leitura) num board — p/ impressão em lote.
+export function renderStatic(boardElement, ficha) {
+  boardElement.innerHTML = '';
+  const list = [...(ficha.board?.objects || [])].sort((a, b) => a.z - b.z);
+  for (const o of list) {
+    const node = el('div', { class: `obj type-${o.type}`, dataset: { id: o.id } });
+    applyBox(node, o);
+    node.append(buildBody(o));
+    boardElement.append(node);
+  }
+}
+
 export function bringFront() { const o = getSelected(); if (o) { o.z = nextZ(); applyBox(boardEl.querySelector(`.obj[data-id="${o.id}"]`), o); touch(); } }
 export function sendBack() {
   const o = getSelected(); if (!o) return;

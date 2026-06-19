@@ -86,7 +86,7 @@ export function newFicha(overrides = {}) {
       // nucleo (usado na Biblioteca/busca/duplicar)
       referencia: '', descricao: '', marca: '', cliente: '',
       colecao: '', categoria: 'Calça Jeans', codigoInterno: '',
-      responsavel: '', data: brDate(isoDate(now)), versao: '1.0', pecaPiloto: '',
+      responsavel: '', data: brDate(isoDate(now)), versao: '1.0', pecaPiloto: '', numero: '',
       // produto (bloco direito do cabecalho)
       produto: '', grupo: '', modelagem: '', tipoProduto: '',
       familia: '', oc: '', prod: '', mNum: '',

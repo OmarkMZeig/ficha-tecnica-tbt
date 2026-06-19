@@ -1,8 +1,10 @@
 // Exportacao: PDF (impressao nativa = fidelidade total), PNG/JPG (html-to-image),
 // e backup/compartilhamento em JSON (ficha + imagens embutidas).
-import { download, slug, toast } from './util.js';
-import { store, imagesAsDataURLs, addImageFromFile, createNew } from './store.js';
+import { download, slug, toast, el } from './util.js';
+import { store, imagesAsDataURLs, addImageFromFile, createNew, fetchFicha, setCurrentSilent, setCurrent } from './store.js';
 import { newFicha } from './model.js';
+import { renderPage } from './ficha.js';
+import * as canvas from './canvas.js';
 
 const pageEl = () => document.getElementById('page');
 
@@ -42,6 +44,32 @@ export async function exportImage(format = 'png') {
     node.style.transform = prevTransform;
     selboxes.forEach((n) => (n.style.display = ''));
   }
+}
+
+// ---- Impressão em lote (várias fichas da Biblioteca) ----
+export async function printFichas(ids) {
+  if (!ids || !ids.length) return;
+  const prev = store.current;
+  const root = el('div', { id: 'printRoot' });
+  for (const id of ids) {
+    const f = await fetchFicha(id);
+    if (!f) continue;
+    setCurrentSilent(f);
+    const pageEl = el('div', { class: 'page' });
+    renderPage(pageEl);
+    canvas.renderStatic(pageEl.querySelector('.drawing-board'), f);
+    root.append(pageEl);
+  }
+  document.body.append(root);
+  document.body.classList.add('multi-print');
+  toast(`Preparando ${ids.length} ficha(s) para impressão...`, 'ok');
+  await new Promise((r) => setTimeout(r, 500)); // deixa as imagens carregarem
+  window.print();
+  setTimeout(() => {
+    root.remove();
+    document.body.classList.remove('multi-print');
+    if (prev) setCurrent(prev); // restaura o editor
+  }, 700);
 }
 
 // ---- Backup / compartilhamento em JSON (.ftj) ----
