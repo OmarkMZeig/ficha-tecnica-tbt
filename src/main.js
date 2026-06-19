@@ -6,7 +6,9 @@ import { TEMPLATES } from './templates.js';
 import {
   store, subscribe, createNew, loadById, listFichas, saveNow, commit,
   duplicateCurrent, newVersionCurrent, addImageFromFile, imageUrl, setCurrent,
+  getMode, setBackendMode,
 } from './store.js';
+import * as cloud from './cloud.js';
 import { renderPage } from './ficha.js';
 import * as canvas from './canvas.js';
 import { initInspector, showSelection } from './inspector.js';
@@ -60,6 +62,7 @@ function buildTopbar() {
     iconBtn('⧉ Duplicar', 'ghost', async () => { await duplicateCurrent(); toast('Ficha duplicada', 'ok'); }),
     iconBtn('＋ Versão', 'ghost', openNewVersion),
     iconBtn('⬇ Exportar', 'primary', openExportMenu),
+    el('button', { class: 'btn ghost', id: 'cloudBtn', onclick: onCloudClick }, '☁ Nuvem'),
     iconBtn('⋯', 'ghost', openMoreMenu),
   );
   // toggle de visao
@@ -118,6 +121,75 @@ function openMoreMenu() {
   );
   const m = modal({ title: 'Mais ações', body, width: '460px' });
 }
+
+// ---------------- Nuvem (Firebase) ----------------
+function onCloudClick() {
+  if (!cloud.cloudAvailable()) { toast('Sem internet — a nuvem precisa de conexão', 'err'); return; }
+  if (cloud.currentUser()) openCloudMenu();
+  else openCloudLogin();
+}
+
+function openCloudLogin() {
+  const email = el('input', { type: 'email', placeholder: 'E-mail', style: inputCss });
+  const senha = el('input', { type: 'password', placeholder: 'Senha', style: inputCss });
+  const msg = el('div', { class: 'hint', style: { color: 'var(--danger)', minHeight: '14px', marginTop: '4px' } });
+  const ok = el('button', { class: 'btn primary' }, 'Entrar');
+  const body = el('div', {},
+    el('p', { class: 'hint', style: { marginBottom: '10px' } }, 'Use o mesmo login do ERP. As fichas passam a ser compartilhadas com a equipe.'),
+    el('div', { class: 'field' }, el('label', { text: 'E-mail' }), email),
+    el('div', { class: 'field' }, el('label', { text: 'Senha' }), senha),
+    msg);
+  const m = modal({ title: '☁ Entrar na nuvem', body, width: '420px', footer: [el('button', { class: 'btn ghost', onclick: () => m.close() }, 'Cancelar'), ok] });
+  const tryLogin = async () => {
+    ok.disabled = true; msg.textContent = 'Conectando...';
+    try {
+      await cloud.login(email.value.trim(), senha.value);
+      m.close();
+      await enterCloud();
+    } catch (e) { msg.textContent = cloud.friendlyError(e); ok.disabled = false; }
+  };
+  ok.onclick = tryLogin;
+  senha.addEventListener('keydown', (e) => { if (e.key === 'Enter') tryLogin(); });
+  setTimeout(() => email.focus(), 50);
+}
+
+function openCloudMenu() {
+  const u = cloud.currentUser();
+  const body = el('div', { style: { display: 'flex', flexDirection: 'column', gap: '8px' } },
+    el('p', { class: 'hint' }, `Conectado como ${u && u.email}. Modo atual: ${getMode() === 'cloud' ? 'NUVEM (compartilhado)' : 'LOCAL'}.`),
+    getMode() !== 'cloud' ? bigBtn('☁  Usar a nuvem agora', 'Carrega as fichas compartilhadas da equipe.', async () => { m.close(); await enterCloud(); }) : null,
+    bigBtn('💻  Voltar ao modo local', 'Usa só as fichas deste computador.', async () => { m.close(); await setBackendMode('local'); await reloadForMode(); updateCloudUI(); toast('Modo local', 'ok'); }),
+    bigBtn('🚪  Sair da conta', 'Desconecta a nuvem.', async () => { m.close(); await cloud.logout(); await setBackendMode('local'); await reloadForMode(); updateCloudUI(); toast('Desconectado', 'ok'); }),
+  );
+  const m = modal({ title: '☁ Nuvem', body, width: '440px' });
+}
+
+async function enterCloud() {
+  try {
+    await setBackendMode('cloud');
+    await reloadForMode();
+    updateCloudUI();
+    toast('Conectado à nuvem — fichas compartilhadas', 'ok');
+  } catch (e) { console.error(e); toast('Erro ao carregar nuvem: ' + (e.message || e), 'err'); }
+}
+
+async function reloadForMode() {
+  const list = await listFichas();
+  if (list.length) await loadById(list.sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''))[0].id);
+  else await createNew((TEMPLATES.find((t) => t.id === 'tpl-exemplo') || TEMPLATES[0]).build());
+  if (view === 'library') refreshLibrary();
+}
+
+function updateCloudUI() {
+  const b = $('#cloudBtn');
+  if (!b) return;
+  const u = cloud.cloudAvailable() && cloud.currentUser();
+  if (getMode() === 'cloud' && u) { b.textContent = '☁ Nuvem ✓'; b.classList.add('primary'); b.classList.remove('ghost'); }
+  else if (u) { b.textContent = '☁ Nuvem'; b.classList.remove('primary'); b.classList.add('ghost'); }
+  else { b.textContent = '☁ Entrar'; b.classList.remove('primary'); b.classList.add('ghost'); }
+}
+
+const inputCss = { width: '100%', height: '36px', padding: '0 10px', background: 'var(--bg-toolbar)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: '6px' };
 
 function chooseBrandLogo() {
   const inp = el('input', { type: 'file', accept: 'image/png,image/jpeg,image/jpg,image/webp', style: { display: 'none' } });
@@ -261,6 +333,17 @@ async function init() {
 
   // guarda ultima ficha aberta
   subscribe((f, reason) => { if (f && reason === 'load') db.setMeta('lastId', f.id); });
+
+  // Nuvem: reflete login e auto-entra se a preferência salva for "cloud"
+  if (cloud.cloudAvailable()) {
+    cloud.onAuth(async (user) => {
+      updateCloudUI();
+      const pref = await db.getMeta('mode');
+      if (user && pref === 'cloud' && getMode() !== 'cloud') await enterCloud();
+      else if (!user && getMode() === 'cloud') { await setBackendMode('local'); await reloadForMode(); updateCloudUI(); }
+    });
+  }
+  updateCloudUI();
 
   canvas.setTool('select');
 }
