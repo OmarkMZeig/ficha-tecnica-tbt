@@ -24,6 +24,8 @@
   .obj.selected { z-index: auto !important; }
   /* Quebra de pagina limpa */
   section, .tbl-wrap, .sign-row { break-inside: avoid; }
+  /* Pagina 1 = cabecalho + desenho + medidas; o resto comeca na pagina 2 */
+  .measures-section { break-after: page; page-break-after: always; }
 }
 
 /* Modo "exportar imagem": classe aplicada ao body temporariamente */

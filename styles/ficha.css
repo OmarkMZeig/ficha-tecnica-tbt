@@ -42,7 +42,7 @@
 /* ---- Prancheta de desenho (area livre) ---- */
 .drawing-wrap { position: relative; }
 .drawing-board {
-  position: relative; width: 100%; height: 146mm;
+  position: relative; width: 100%; height: 132mm;
   border: 1.4px solid var(--paper-line-strong);
   background:
     linear-gradient(rgba(0,0,0,.025) 1px, transparent 1px) 0 0 / 100% 6mm,
