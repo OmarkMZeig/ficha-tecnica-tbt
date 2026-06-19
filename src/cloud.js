@@ -10,10 +10,10 @@ const CONFIG = {
   messagingSenderId: '115465583238',
   appId: '1:115465583238:web:e0473dcf1ce1cc94eb2f07',
 };
-const COL = 'fichas_tecnicas';   // coleção das fichas no Firestore
-const IMG = 'fichas_tecnicas';   // pasta das imagens no Storage
+const COL = 'fichas_tecnicas';     // coleção das fichas no Firestore
+const IMGCOL = 'fichas_tecnicas_img'; // imagens (base64) no Firestore — sem Storage/Blaze
 
-let auth = null, fs = null, storage = null, ready = false;
+let auth = null, fs = null, ready = false;
 const urlCache = new Map();
 
 export function cloudAvailable() { return typeof window.firebase !== 'undefined'; }
@@ -23,7 +23,7 @@ export function initCloud() {
   if (!cloudAvailable()) return false;
   const fb = window.firebase;
   const app = fb.apps && fb.apps.length ? fb.app() : fb.initializeApp(CONFIG);
-  auth = fb.auth(); fs = fb.firestore(); storage = fb.storage();
+  auth = fb.auth(); fs = fb.firestore();
   try { auth.setPersistence(fb.auth.Auth.Persistence.LOCAL); } catch (e) { /* ok */ }
   ready = true;
   return true;
@@ -45,19 +45,52 @@ export function onFichasChange(cb) {
   return fs.collection(COL).onSnapshot((s) => cb(s.docs.map((d) => d.data())), (e) => console.warn('snapshot', e));
 }
 
-// ---- Imagens (Storage) ----
+// ---- Imagens (Firestore, base64 comprimido — sem Storage/Blaze) ----
+// Cada imagem é um doc <1MB. dataURL base64 serve direto como <img src> e
+// não "contamina" o canvas (export PNG funciona sem config de CORS).
 export async function uploadImage(key, blob) {
-  await storage.ref().child(`${IMG}/${key}`).put(blob);
-  urlCache.delete(key);
+  const dataUrl = await toStorableDataURL(blob);
+  await fs.collection(IMGCOL).doc(key).set({ data: dataUrl, ts: Date.now() });
+  urlCache.set(key, dataUrl);
   return key;
 }
 export async function imageUrl(key) {
   if (urlCache.has(key)) return urlCache.get(key);
-  const u = await storage.ref().child(`${IMG}/${key}`).getDownloadURL();
+  const d = await fs.collection(IMGCOL).doc(key).get();
+  const u = d.exists ? (d.data().data || '') : '';
   urlCache.set(key, u);
   return u;
 }
-export async function deleteImage(key) { try { await storage.ref().child(`${IMG}/${key}`).delete(); } catch (e) { /* ok */ } }
+export async function deleteImage(key) { try { await fs.collection(IMGCOL).doc(key).delete(); } catch (e) { /* ok */ } }
+
+const blobToDataURL = (blob) => new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(blob); });
+
+function downscale(blob, max, q) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const s = Math.min(max / img.width, max / img.height, 1);
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      resolve(c.toDataURL('image/jpeg', q));
+      URL.revokeObjectURL(img.src);
+    };
+    img.onerror = reject;
+    img.src = URL.createObjectURL(blob);
+  });
+}
+
+// Mantém o doc < ~1MB (limite do Firestore). Imagens pequenas ficam como estão
+// (preserva PNG/transparência); grandes são reduzidas a JPEG.
+async function toStorableDataURL(blob) {
+  if (blob.size <= 700 * 1024) return blobToDataURL(blob);
+  for (const [max, q] of [[1400, 0.78], [1100, 0.70], [850, 0.62]]) {
+    const u = await downscale(blob, max, q);
+    if (u.length < 950000) return u;
+  }
+  return downscale(blob, 680, 0.55);
+}
 
 export const friendlyError = (e) => {
   const m = (e && e.code) || '';
