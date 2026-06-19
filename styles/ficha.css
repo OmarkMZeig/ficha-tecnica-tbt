@@ -113,7 +113,7 @@ table.fic td .del-row:hover { color: var(--danger); }
 .obs-box:empty::before { content: attr(data-ph); color: #c4c4c4; }
 
 .sign-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; margin-top: 4mm; }
-.sign-cell { border: 1px solid var(--paper-line-strong); padding: 18px 8px 5px; text-align: center; font-size: 8.5px; color: #555; }
+.sign-cell { border: 1px solid var(--paper-line-strong); padding: 18px 8px 5px; text-align: center; font-size: 8.5px; color: #555; background: #ffffff; }
 .sign-cell .line { border-top: 1px solid var(--paper-line-strong); margin-bottom: 4px; }
 .sign-cell .who { font-weight: 700; color: #1a1a1a; font-size: 9.5px; }
 
@@ -161,8 +161,8 @@ table.fic.measures th.sizehead { background: var(--accent-orange); color: #fff; 
 table.fic.measures th.subhead { background: #f0a072; color: #fff; font-size: 7px; border-color: #e0905f; }
 
 /* ====== Rodape responsaveis ====== */
-.fic-foot2 { display: grid; grid-template-columns: repeat(4, 1fr); border: 1.4px solid var(--paper-line-strong); border-top: none; }
-.fic-foot2 .foot-cell { display: flex; gap: 5px; padding: 3px 6px; border-right: 1px solid var(--paper-line); align-items: center; }
+.fic-foot2 { display: grid; grid-template-columns: repeat(4, 1fr); border: 1.4px solid var(--paper-line-strong); border-top: none; background: #ffffff; }
+.fic-foot2 .foot-cell { display: flex; gap: 5px; padding: 3px 6px; border-right: 1px solid var(--paper-line); align-items: center; background: #ffffff; }
 .fic-foot2 .foot-cell:last-child { border-right: none; }
 .fic-foot2 .sk { font-weight: 700; text-transform: uppercase; color: #444; font-size: 7px; }
 .fic-foot2 .sv { flex: 1; font-size: 9px; font-weight: 600; outline: none; }
