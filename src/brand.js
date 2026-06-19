@@ -77,22 +77,27 @@ export function trimToContent(dataUrl) {
   });
 }
 
-// Retorna um elemento DOM com o logo (custom se houver, senao o wordmark).
-export function brandLogoEl({ height = 28, color = 'currentColor', maxWidth = 150 } = {}) {
+const ASSET = 'assets/logo-tbt.png'; // logo fixo do site (fundo claro)
+
+// Retorna um elemento DOM com o logo.
+// variant 'chrome' (topbar escura): sempre o wordmark branco vetorial.
+// variant 'paper'  (cabeçalho da ficha, fundo branco): logo enviado > asset fixo > wordmark preto.
+export function brandLogoEl({ height = 28, color = 'currentColor', maxWidth = 170, variant = 'paper' } = {}) {
   const span = document.createElement('span');
   span.style.display = 'inline-flex';
   span.style.alignItems = 'center';
-  if (_custom) {
+  if (variant === 'chrome') { span.innerHTML = tbtWordmark(color, height); return span; }
+
+  const mkImg = (src) => {
     const img = document.createElement('img');
-    img.src = _custom;
-    img.style.height = height + 'px';
-    img.style.width = 'auto';
-    img.style.maxWidth = maxWidth + 'px';
-    img.style.objectFit = 'contain';
-    img.alt = 'Logo';
-    span.append(img);
-  } else {
-    span.innerHTML = tbtWordmark(color, height);
-  }
+    img.src = src; img.alt = 'Logo';
+    img.style.height = height + 'px'; img.style.width = 'auto';
+    img.style.maxWidth = maxWidth + 'px'; img.style.objectFit = 'contain';
+    return img;
+  };
+  if (_custom) { span.append(mkImg(_custom)); return span; }
+  const img = mkImg(ASSET);
+  img.onerror = () => { span.innerHTML = tbtWordmark('#111', height); };
+  span.append(img);
   return span;
 }

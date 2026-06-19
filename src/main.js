@@ -208,7 +208,7 @@ function chooseBrandLogo() {
 
 function applyTopbarLogo() {
   const slot = $('#brandLogoSlot');
-  if (slot) { slot.innerHTML = ''; slot.append(brandLogoEl({ height: 18, color: '#ffffff' })); }
+  if (slot) { slot.innerHTML = ''; slot.append(brandLogoEl({ height: 18, color: '#ffffff', variant: 'chrome' })); }
 }
 
 async function saveAsTemplate() {
