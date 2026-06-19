@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ficha Técnica TBT</title>
+  <link rel="stylesheet" href="styles/reset.css" />
+  <link rel="stylesheet" href="styles/tokens.css" />
+  <link rel="stylesheet" href="styles/app.css" />
+  <link rel="stylesheet" href="styles/ficha.css" />
+  <link rel="stylesheet" href="styles/print.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-logo" id="brandLogoSlot"></span>
+        <div>Ficha Técnica <small>de Produção</small></div>
+      </div>
+      <div class="ficha-id">
+        <span class="ref" id="topRef">Nova ficha</span>
+        <span class="desc" id="topDesc">—</span>
+      </div>
+      <div class="spacer"></div>
+      <div class="seg" id="viewToggle">
+        <button data-view="editor" class="active">Editor</button>
+        <button data-view="library">Biblioteca</button>
+      </div>
+      <div class="actions" id="topActions"></div>
+    </header>
+
+    <!-- Workspace -->
+    <div class="workspace" id="workspace">
+      <nav class="tools" id="tools"></nav>
+      <div class="canvas-scroll" id="canvasScroll">
+        <div class="page" id="page"></div>
+      </div>
+      <aside class="inspector" id="inspector"></aside>
+    </div>
+
+    <!-- Biblioteca / Banco de produtos -->
+    <div class="library" id="library" hidden></div>
+  </div>
+
+  <div class="toasts" id="toasts"></div>
+  <div id="modalRoot"></div>
+
+  <input type="file" id="fileImage" accept="image/png,image/jpeg,image/jpg,image/webp" multiple hidden />
+
+  <script src="vendor/html-to-image.js"></script>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>

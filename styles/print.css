@@ -1,0 +1,35 @@
+/* ====== Impressao / Exportacao PDF (fidelidade A4) ======
+   Acionado ao imprimir (Ctrl+P -> Salvar como PDF) ou via botao Exportar. */
+@page { size: A4 portrait; margin: 0; }
+
+@media print {
+  html, body { background: #fff !important; height: auto !important; overflow: visible !important; }
+  body * { visibility: hidden; }
+  .page, .page * { visibility: visible; }
+
+  /* Esconde todo o chrome do app */
+  .topbar, .tools, .inspector, .toasts, .text-toolbar, .selbox,
+  .modal-backdrop, .block-title .add-row, .row-handle, .del-row, .gctl, .gbtn,
+  .canvas-scroll::-webkit-scrollbar { display: none !important; }
+
+  .workspace, .canvas-scroll { display: block !important; overflow: visible !important; padding: 0 !important; background: #fff !important; }
+
+  .page {
+    position: absolute; left: 0; top: 0; margin: 0 !important;
+    box-shadow: none !important; transform: none !important;
+    width: 210mm !important; min-height: 297mm;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  table.fic td[contenteditable]:focus { box-shadow: none !important; background: transparent !important; }
+  .obj.selected { z-index: auto !important; }
+  /* Quebra de pagina limpa */
+  section, .tbl-wrap, .sign-row { break-inside: avoid; }
+}
+
+/* Modo "exportar imagem": classe aplicada ao body temporariamente */
+body.exporting .topbar, body.exporting .tools, body.exporting .inspector,
+body.exporting .selbox, body.exporting .text-toolbar,
+body.exporting .block-title .add-row, body.exporting .row-handle, body.exporting .del-row,
+body.exporting .gctl, body.exporting .gbtn {
+  visibility: hidden;
+}

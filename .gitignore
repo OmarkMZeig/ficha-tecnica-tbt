@@ -1,0 +1,6 @@
+.claude/
+*.zip
+Thumbs.db
+desktop.ini
+~$*
+*.tmp
