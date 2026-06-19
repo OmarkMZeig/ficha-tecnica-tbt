@@ -96,7 +96,8 @@ table.fic th, table.fic td {
   vertical-align: middle; height: 20px;
 }
 table.fic thead th { background: var(--paper-head); font-size: 8.5px; text-transform: uppercase; letter-spacing: .4px; font-weight: 700; color: #333; }
-table.fic tbody tr:nth-child(even) { background: var(--paper-zebra); }
+table.fic tbody tr:nth-child(even) { background: #ffffff; } /* sem zebra: dark mode forçado mantém células brancas legíveis */
+table.fic tbody td { background: #ffffff; }
 table.fic td[contenteditable] { outline: none; }
 table.fic td[contenteditable]:focus { background: var(--accent-soft); box-shadow: inset 0 0 0 1.5px var(--accent); }
 table.fic td.num { text-align: center; }
@@ -108,7 +109,7 @@ table.fic td .del-row:hover { color: var(--danger); }
 .tbl-cols-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
 
 /* Observacoes / assinaturas / revisoes */
-.obs-box { border: 1.4px solid var(--paper-line-strong); border-top: none; padding: 6px 8px; min-height: 60px; font-size: 10px; outline: none; line-height: 1.4; }
+.obs-box { border: 1.4px solid var(--paper-line-strong); border-top: none; padding: 6px 8px; min-height: 60px; font-size: 10px; outline: none; line-height: 1.4; background: #ffffff; }
 .obs-box:empty::before { content: attr(data-ph); color: #c4c4c4; }
 
 .sign-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; margin-top: 4mm; }
