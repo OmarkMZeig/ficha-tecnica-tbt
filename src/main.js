@@ -1,7 +1,7 @@
 // Bootstrap e orquestracao geral do aplicativo.
 import { el, toast, modal, confirmDialog, $, $$ } from './util.js';
 import * as db from './db.js';
-import { newFicha } from './model.js';
+import { newFicha, emptyRows, newSpecs } from './model.js';
 import { TEMPLATES } from './templates.js';
 import {
   store, subscribe, createNew, loadById, listFichas, saveNow, commit,
@@ -33,6 +33,8 @@ const TOOLS = [
   { t: 'rect', icon: '▭', label: 'Retângulo (R)' },
   { t: 'callout', icon: '💬', label: 'Balão (B)' },
   { t: 'number', icon: '①', label: 'Número (N)' },
+  { sep: true },
+  { t: 'clear', icon: '🧹', label: 'Limpar preenchimentos', action: 'clear' },
 ];
 
 function buildTools() {
@@ -42,7 +44,7 @@ function buildTools() {
     if (it.sep) { nav.append(el('div', { class: 'sep' })); continue; }
     const b = el('button', { class: 'tool', dataset: { tool: it.t } },
       el('span', { html: it.icon }), el('span', { class: 'label', text: it.label }));
-    b.onclick = () => activateTool(it.t);
+    b.onclick = () => (it.action === 'clear' ? openClearMenu() : activateTool(it.t));
     nav.append(b);
   }
 }
@@ -120,6 +122,65 @@ function openMoreMenu() {
     bigBtn('🗑  Excluir esta ficha', 'Remove a ficha atual do banco.', async () => { m.close(); if (await confirmDialog('Excluir a ficha atual?', { danger: true, okLabel: 'Excluir' })) { await db.deleteFicha(store.current.id); await bootAfterDelete(); } }),
   );
   const m = modal({ title: 'Mais ações', body, width: '460px' });
+}
+
+// ---------------- Limpar preenchimentos ----------------
+const CLEAR_MODULES = [
+  { key: 'cabecalho', label: 'Cabeçalho (referência, tecido, linha, pesponto, grade...)' },
+  { key: 'desenho', label: 'Desenho técnico (imagens e marcações)' },
+  { key: 'medidas', label: 'Tabela de medidas' },
+  { key: 'aviamentos', label: 'Aviamentos' },
+  { key: 'materiais', label: 'Materiais / Tecidos' },
+  { key: 'custos', label: 'Custos' },
+  { key: 'observacoes', label: 'Observações' },
+  { key: 'revisoes', label: 'Revisões' },
+  { key: 'aprovacoes', label: 'Aprovações e rodapé' },
+];
+
+function clearModule(f, key) {
+  if (key === 'cabecalho') {
+    const keep = { numero: f.meta.numero, categoria: f.meta.categoria, versao: f.meta.versao, marca: f.meta.marca };
+    f.meta = { ...newFicha().meta, ...keep };
+    f.specs = newSpecs();
+    f.grade.qtd = f.grade.sizes.map(() => '');
+  } else if (key === 'desenho') { f.board.objects = []; f.board.numberSeq = 0; }
+  else if (key === 'medidas') { f.medidas.rows.forEach((r) => { r.a = []; r.d = []; }); }
+  else if (key === 'aviamentos') { f.tables.aviamentos = emptyRows('aviamentos', 4); }
+  else if (key === 'materiais') { f.tables.materiais = emptyRows('materiais', 2); }
+  else if (key === 'custos') { f.tables.custos = emptyRows('custos', 4); }
+  else if (key === 'observacoes') { f.observacoes = ''; }
+  else if (key === 'revisoes') { f.revisoes = []; }
+  else if (key === 'aprovacoes') { f.assinaturas = { modelista: '', aprovacao: '', producao: '' }; f.footer = { oficina: '', desenho: '', modelagem: '', fichaTecnica: '' }; }
+}
+
+function openClearMenu() {
+  const opts = CLEAR_MODULES.map((mod) => {
+    const chk = el('input', { type: 'checkbox' });
+    return { mod, chk, row: el('label', { class: 'clear-row' }, chk, el('span', { text: mod.label })) };
+  });
+  const allChk = el('input', { type: 'checkbox' });
+  allChk.onchange = () => opts.forEach((o) => { o.chk.checked = allChk.checked; });
+  const allRow = el('label', { class: 'clear-row master' }, allChk, el('span', { text: 'Tudo (limpar a ficha inteira)' }));
+
+  const ok = el('button', { class: 'btn danger' }, 'Limpar selecionados');
+  const body = el('div', {},
+    el('p', { class: 'hint', style: { marginBottom: '10px' } }, 'Apaga apenas os PREENCHIMENTOS (a ficha e o número não são excluídos). Marque o que limpar:'),
+    allRow,
+    el('div', { style: { height: '1px', background: 'var(--border)', margin: '8px 0' } }),
+    ...opts.map((o) => o.row));
+  const m = modal({ title: '🧹 Limpar preenchimentos', body, width: '460px', footer: [el('button', { class: 'btn ghost', onclick: () => m.close() }, 'Cancelar'), ok] });
+
+  ok.onclick = async () => {
+    const keys = opts.filter((o) => o.chk.checked).map((o) => o.mod.key);
+    if (!keys.length) { toast('Selecione ao menos um módulo'); return; }
+    m.close();
+    if (!await confirmDialog(`Apagar os preenchimentos de ${keys.length === CLEAR_MODULES.length ? 'TODA a ficha' : keys.length + ' módulo(s)'}? Não dá para desfazer.`, { danger: true, okLabel: 'Limpar' })) return;
+    keys.forEach((k) => clearModule(store.current, k));
+    commit('load');
+    await saveNow();
+    canvas.setTool('select');
+    toast('Preenchimentos limpos', 'ok');
+  };
 }
 
 // ---------------- Nuvem (Firebase) ----------------

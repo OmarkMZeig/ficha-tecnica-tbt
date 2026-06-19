@@ -26,6 +26,8 @@
   section, .tbl-wrap, .sign-row { break-inside: avoid; }
   /* Pagina 1 = cabecalho + desenho + medidas; o resto comeca na pagina 2 */
   .measures-section { break-after: page; page-break-after: always; }
+  /* Margem no topo da pagina 2 (o bloco que inicia a 2a folha ganha respiro) */
+  .measures-section + section { padding-top: 9mm; }
 
   /* Impressao em lote (varias fichas): esconde o app, imprime so o #printRoot */
   body.multi-print #app { display: none !important; }

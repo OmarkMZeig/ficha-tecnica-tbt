@@ -119,6 +119,11 @@ body { background: var(--bg-app); color: var(--text); overflow: hidden; }
 }
 .toggle-row button.active { background: var(--accent-soft); color: #fff; box-shadow: inset 0 0 0 1px var(--accent); }
 
+.clear-row { display: flex; align-items: center; gap: 9px; padding: 7px 4px; font-size: 13px; cursor: pointer; border-radius: 5px; }
+.clear-row:hover { background: var(--bg-elev); }
+.clear-row input { width: 17px; height: 17px; accent-color: var(--accent); cursor: pointer; }
+.clear-row.master { font-weight: 600; }
+
 .hint { color: var(--text-faint); font-size: 11px; line-height: 1.5; }
 .empty-inspector { color: var(--text-faint); font-size: 12px; text-align: center; padding: 40px 10px; line-height: 1.6; }
 
