@@ -1,4 +1,8 @@
 :root {
+  /* App tem tema escuro próprio; declarar isto impede o "modo escuro forçado"
+     do navegador de inverter as cores (que deixava a folha branca ilegível). */
+  color-scheme: dark;
+
   /* Tipografia */
   --font-ui: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-paper: Arial, Helvetica, sans-serif; /* fidelidade de impressao */

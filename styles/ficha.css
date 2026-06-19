@@ -2,6 +2,7 @@
 .page {
   width: var(--page-w); min-height: var(--page-h);
   background: var(--paper); color: var(--paper-text);
+  color-scheme: light; /* a folha é sempre clara, mesmo com dark mode do navegador */
   font-family: var(--font-paper);
   box-shadow: var(--shadow-page);
   padding: var(--page-pad);
