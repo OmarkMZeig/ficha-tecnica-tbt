@@ -80,6 +80,17 @@ function showObject(o) {
     root.append(swatches(o.fill, (v) => canvas.updateSelected({ fill: v })));
   }
 
+  if (o.type === 'zoom') {
+    root.append(el('h3', { text: 'Detalhe ampliado' }));
+    root.append(swatches(o.stroke, (v) => canvas.updateSelected({ stroke: v })));
+    root.append(el('div', { class: 'prop-grid', style: { marginTop: '8px' } },
+      numField('Borda', o.strokeW || 2, (v) => canvas.updateSelected({ strokeW: Math.max(0, v) }))));
+    root.append(el('div', { class: 'toggle-row', style: { marginTop: '8px' } },
+      tgl('◯', o.shape !== 'rect', () => canvas.updateSelected({ shape: 'circle' })),
+      tgl('▭', o.shape === 'rect', () => canvas.updateSelected({ shape: 'rect' }))));
+    root.append(el('p', { class: 'hint', style: { marginTop: '8px' } }, 'Arraste os cantos para mudar o tamanho/ampliação. Use a ferramenta Seta para ligar o detalhe ao desenho. Para refazer, use 🔍 sobre a imagem.'));
+  }
+
   root.append(el('div', { style: { marginTop: '18px' } }, btnFull('🗑 Excluir objeto', () => canvas.deleteSelected(), 'danger')));
   root.append(el('p', { class: 'hint', style: { marginTop: '12px' } }, 'Atalhos: Delete = excluir • Ctrl+D = duplicar • setas = mover'));
 }

@@ -33,6 +33,7 @@ const TOOLS = [
   { t: 'rect', icon: '▭', label: 'Retângulo (R)' },
   { t: 'callout', icon: '💬', label: 'Balão (B)' },
   { t: 'number', icon: '①', label: 'Número (N)' },
+  { t: 'zoom', icon: '🔍', label: 'Zoom de detalhe (Z)' },
   { sep: true },
   { t: 'clear', icon: '🧹', label: 'Limpar preenchimentos', action: 'clear' },
 ];
@@ -347,7 +348,7 @@ function wireKeyboard() {
       return;
     }
     // atalhos de ferramenta
-    const map = { v: 'select', i: 'image', t: 'text', a: 'arrow', l: 'line', c: 'circle', r: 'rect', b: 'callout', n: 'number' };
+    const map = { v: 'select', i: 'image', t: 'text', a: 'arrow', l: 'line', c: 'circle', r: 'rect', b: 'callout', n: 'number', z: 'zoom' };
     const k = e.key.toLowerCase();
     if (map[k] && !e.ctrlKey && !e.metaKey) activateTool(map[k]);
   });

@@ -51,6 +51,7 @@
   cursor: default;
 }
 .drawing-board.tool-active { cursor: crosshair; }
+.zoom-marquee { position: absolute; border: 1.5px dashed var(--accent); background: rgba(47, 111, 237, .12); pointer-events: none; z-index: 900; box-sizing: border-box; }
 
 /* Objetos sobre a prancheta (modelo unificado: todo objeto e um bbox posicionado) */
 .obj { position: absolute; box-sizing: border-box; }

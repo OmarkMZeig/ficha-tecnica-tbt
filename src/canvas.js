@@ -1,7 +1,7 @@
 // Prancheta de desenho: objetos posicionados livremente (imagens, marcacoes,
 // caixas de texto, numeros) com mover / redimensionar / girar.
 // Modelo unificado: todo objeto e um bbox { x, y, w, h, rot }.
-import { el, clamp, escapeHtml } from './util.js';
+import { el, clamp, escapeHtml, toast } from './util.js';
 import { store, commit, touch, imageUrl } from './store.js';
 import { newObject } from './model.js';
 
@@ -93,9 +93,33 @@ function buildBody(o) {
     d.textContent = o.value;
     return d;
   }
+  if (o.type === 'zoom') return buildZoomBody(o);
+
   // formas vetoriais
   const holder = el('div', { class: 'obj-body' });
   holder.innerHTML = shapeSVG(o);
+  return holder;
+}
+
+function buildZoomBody(o) {
+  const holder = el('div', { class: 'obj-body' });
+  holder.style.cssText = `position:relative; overflow:hidden; background:#fff; border:${o.strokeW}px solid ${o.stroke}; border-radius:${o.shape === 'rect' ? '4px' : '50%'};`;
+  const src = objs().find((x) => x.id === o.srcId && x.type === 'image');
+  const url = src && imageUrl(src.imgKey);
+  if (src && url) {
+    const fw = Math.max(0.02, o.fw || 0.25);
+    const mag = o.w / (fw * src.w);          // amplia a região selecionada p/ preencher a largura
+    const innerW = src.w * mag, innerH = src.h * mag;
+    const wrap = el('div', {});
+    wrap.style.cssText = `position:absolute; width:${innerW}px; height:${innerH}px; left:${-o.fx * innerW}px; top:${-o.fy * innerH}px;`;
+    const img = el('img', { src: url, draggable: 'false' });
+    img.style.cssText = 'width:100%; height:100%; object-fit:contain; display:block;';
+    wrap.append(img);
+    holder.append(wrap);
+  } else {
+    holder.style.display = 'grid'; holder.style.placeItems = 'center';
+    holder.append(el('span', { style: { fontSize: '9px', color: '#999' } }, '🔍 zoom'));
+  }
   return holder;
 }
 
@@ -171,6 +195,8 @@ function updateSelbox(o) {
 
 // ---------- Interacoes ----------
 function onBoardPointerDown(e) {
+  // o Zoom precisa iniciar SOBRE a imagem, entao roda antes da guarda de objeto
+  if (tool === 'zoom') { e.preventDefault(); createZoomWithDrag(e); return; }
   if (e.target.closest('.obj') || e.target.closest('.selbox')) return;
   if (tool !== 'select') { createWithDrag(e); return; }
   deselect();
@@ -219,7 +245,7 @@ function onResizeDown(e, o, dir) {
     const nc = { x: F.x + cen.x, y: F.y + cen.y };
     o.w = Math.round(w); o.h = Math.round(h);
     o.x = Math.round(nc.x - w / 2); o.y = Math.round(nc.y - h / 2);
-    if (['arrow', 'line', 'circle', 'rect', 'number', 'callout'].includes(o.type)) rebuildBody(o);
+    if (['arrow', 'line', 'circle', 'rect', 'number', 'callout', 'zoom'].includes(o.type)) rebuildBody(o);
     else applyBox(node, o);
     updateSelbox(o);
   };
@@ -280,6 +306,54 @@ function createWithDrag(e) {
     select(o.id);
     commit('object');
     if (o.type === 'text') startTextEdit(o);
+  };
+  window.addEventListener('pointermove', move);
+  window.addEventListener('pointerup', up);
+}
+
+// Ferramenta Zoom: arraste sobre uma imagem para criar um detalhe ampliado.
+function createZoomWithDrag(e) {
+  const start = boardPoint(e);
+  const img = objs().filter((o) => o.type === 'image')
+    .sort((a, b) => b.z - a.z)
+    .find((o) => start.x >= o.x && start.x <= o.x + o.w && start.y >= o.y && start.y <= o.y + o.h);
+  if (!img) { toast('Use o Zoom sobre uma imagem importada para o desenho.', 'err'); setTool('select'); return; }
+
+  const marquee = el('div', { class: 'zoom-marquee' });
+  boardEl.append(marquee);
+  const draw = (p) => {
+    const x = Math.min(start.x, p.x), y = Math.min(start.y, p.y), w = Math.abs(p.x - start.x), h = Math.abs(p.y - start.y);
+    marquee.style.cssText = `position:absolute; left:${x}px; top:${y}px; width:${w}px; height:${h}px;`;
+    return { x, y, w, h };
+  };
+  const move = (ev) => draw(boardPoint(ev));
+  const up = (ev) => {
+    window.removeEventListener('pointermove', move);
+    window.removeEventListener('pointerup', up);
+    marquee.remove();
+    let { x, y, w, h } = draw(boardPoint(ev));
+    if (w < 12 || h < 12) { w = Math.min(70, img.w * 0.3); h = w; x = start.x - w / 2; y = start.y - h / 2; } // clique = região padrão
+    // seleção quadrada -> detalhe circular (padrão de ficha técnica)
+    { const cx = x + w / 2, cy = y + h / 2, side = Math.max(w, h); w = h = side; x = cx - side / 2; y = cy - side / 2; }
+    // limita a seleção à área da imagem
+    x = clamp(x, img.x, img.x + img.w); y = clamp(y, img.y, img.y + img.h);
+    w = Math.min(w, img.x + img.w - x); h = Math.min(h, img.y + img.h - y);
+    const fx = (x - img.x) / img.w, fy = (y - img.y) / img.h, fw = w / img.w, fh = h / img.h;
+    const mag = 2.3;
+    let zw = w * mag, zh = h * mag;
+    const maxDim = Math.min(boardEl.offsetWidth * 0.5, 280);
+    const k = Math.min(1, maxDim / Math.max(zw, zh));
+    zw = Math.round(zw * k); zh = Math.round(zh * k);
+    const o = newObject('zoom', {
+      srcId: img.id, fx, fy, fw, fh, w: zw, h: zh, shape: 'circle', z: nextZ(),
+      x: clamp(img.x + img.w + 14, 0, Math.max(0, boardEl.offsetWidth - zw)),
+      y: clamp(img.y, 0, Math.max(0, boardEl.offsetHeight - zh)),
+    });
+    objs().push(o);
+    boardEl.append(renderObject(o));
+    setTool('select');
+    select(o.id);
+    commit('object');
   };
   window.addEventListener('pointermove', move);
   window.addEventListener('pointerup', up);

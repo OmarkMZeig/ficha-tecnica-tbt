@@ -148,6 +148,8 @@ export function newObject(type, props = {}) {
     rect: { w: 120, h: 80, stroke: '#db4040', strokeW: 2.5, fill: 'none' },
     callout: { w: 150, h: 56, stroke: '#1a1a1a', strokeW: 1.2, fill: '#ffffff', text: 'Observação', font: 'Arial', size: 10, color: '#1a1a1a' },
     number: { w: 24, h: 24, value: 1, stroke: '#1a1a1a', fill: '#1a1a1a', color: '#fff' },
+    // detalhe ampliado (lupa): recorta uma região de uma imagem (srcId) e amplia
+    zoom: { w: 120, h: 120, shape: 'circle', stroke: '#1a1a1a', strokeW: 2, srcId: '', fx: 0, fy: 0, fw: 0.25, fh: 0.25 },
   };
   return { ...base, ...(byType[type] || {}), ...props };
 }
