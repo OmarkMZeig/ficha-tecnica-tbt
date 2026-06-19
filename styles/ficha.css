@@ -42,7 +42,7 @@
 /* ---- Prancheta de desenho (area livre) ---- */
 .drawing-wrap { position: relative; }
 .drawing-board {
-  position: relative; width: 100%; height: 118mm;
+  position: relative; width: 100%; height: 146mm;
   border: 1.4px solid var(--paper-line-strong);
   background:
     linear-gradient(rgba(0,0,0,.025) 1px, transparent 1px) 0 0 / 100% 6mm,
@@ -127,19 +127,19 @@ table.fic td .del-row:hover { color: var(--danger); }
 .fic-brandbar .ver-badge .sv.inline { display: inline-block; min-width: 22px; font-weight: 700; outline: none; }
 
 .fic-ctrl { display: grid; grid-template-columns: repeat(5, 1fr); border-top: 1.4px solid var(--paper-line-strong); }
-.fic-ctrl .cc { border-right: 1px solid var(--paper-line); padding: 2px 6px 3px; }
+.fic-ctrl .cc { border-right: 1px solid var(--paper-line); padding: 4px 8px 5px; }
 .fic-ctrl .cc:last-child { border-right: none; }
-.fic-ctrl .cc .k { font-size: 6.5px; text-transform: uppercase; letter-spacing: .4px; color: #888; font-weight: 700; }
-.fic-ctrl .cc .v { font-size: 10.5px; font-weight: 600; min-height: 13px; outline: none; }
+.fic-ctrl .cc .k { font-size: 7.5px; text-transform: uppercase; letter-spacing: .4px; color: #888; font-weight: 700; }
+.fic-ctrl .cc .v { font-size: 12px; font-weight: 600; min-height: 16px; outline: none; }
 
 .fic-head2 { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--paper-line-strong); }
 .fic-head2 .hcol:first-child { border-right: 1.4px solid var(--paper-line-strong); }
 
-.sline { display: flex; align-items: stretch; border-top: 1px solid var(--paper-line); min-height: 15px; }
+.sline { display: flex; align-items: stretch; border-top: 1px solid var(--paper-line); min-height: 19px; }
 .hcol > .sline:first-child { border-top: none; }
-.sline .sk { font-weight: 700; text-transform: uppercase; color: #444; padding: 2px 5px; white-space: nowrap; font-size: 7px; display: flex; align-items: center; }
+.sline .sk { font-weight: 700; text-transform: uppercase; color: #444; padding: 3px 6px; white-space: nowrap; font-size: 8px; display: flex; align-items: center; }
 .sline .sk2 { border-left: 1px solid var(--paper-line); }
-.sline .sv { flex: 1; padding: 2px 5px; font-size: 9px; font-weight: 600; outline: none; min-width: 0; }
+.sline .sv { flex: 1; padding: 3px 6px; font-size: 10.5px; font-weight: 600; outline: none; min-width: 0; }
 .sline.two .sv:first-of-type { border-right: 1px solid var(--paper-line); }
 .sv:empty::before { content: attr(data-ph); color: #cacaca; font-weight: 400; }
 
