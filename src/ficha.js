@@ -6,7 +6,7 @@ import { store, touch, commit } from './store.js';
 import { tableSection } from './tables.js';
 import { measuresSection, refreshMeasures } from './measures.js';
 import { brandLogoEl } from './brand.js';
-import { blockTitle, sectionClass } from './blocks.js';
+import { blockTitle, sectionClass, rowEye, rowHiddenClass } from './blocks.js';
 
 export function renderPage(pageEl) {
   const f = store.current;
@@ -168,17 +168,19 @@ function qualidadeBlock(f) {
       { k: 'tipo', label: 'Tipo de defeito' },
       { k: 'status', label: 'Status', w: '90px' },
     ];
-    const thead = el('thead', {}, el('tr', {}, ...cols.map((c) => el('th', { style: c.w ? { width: c.w } : {} }, c.label)), el('th', { style: { width: '14px' }, html: '&nbsp;' })));
+    const thead = el('thead', {}, el('tr', {}, ...cols.map((c) => el('th', { style: c.w ? { width: c.w } : {} }, c.label)), el('th', { style: { width: '30px' }, html: '&nbsp;' })));
     const tb = el('tbody');
     f.qualidade.rows.forEach((r, i) => {
-      const tr = el('tr', {});
+      const tr = el('tr', { class: rowHiddenClass(r) });
       cols.forEach((c) => {
         const td = el('td', { contenteditable: 'true', class: c.c ? 'num' : '' });
         td.textContent = r[c.k] || '';
         td.addEventListener('input', () => { r[c.k] = td.textContent; touch(); });
         tr.append(td);
       });
-      tr.append(el('td', { class: 'num' }, el('span', { class: 'del-row', onclick: () => { f.qualidade.rows.splice(i, 1); render(); commit('cq'); } }, '✕')));
+      tr.append(el('td', { class: 'rowctl' },
+        rowEye(r, () => { render(); commit('cq'); }),
+        el('span', { class: 'del-row', onclick: () => { f.qualidade.rows.splice(i, 1); render(); commit('cq'); } }, '✕')));
       tb.append(tr);
     });
     sec.append(title, el('div', { class: 'tbl-wrap' }, el('table', { class: 'fic' }, thead, tb)));
@@ -197,18 +199,20 @@ function revisionsBlock(f) {
       el('button', { class: 'add-row', onclick: () => { f.revisoes.push({ data: brDate(isoDate()), usuario: f.meta.responsavel || '', alteracao: '' }); render(); commit('rev'); } }, '+ revisão'));
     const tb = el('tbody');
     f.revisoes.forEach((r, i) => {
-      const tr = el('tr', {});
+      const tr = el('tr', { class: rowHiddenClass(r) });
       ['data', 'usuario', 'alteracao'].forEach((k) => {
         const td = el('td', { contenteditable: 'true', class: k === 'data' ? 'num' : '' });
         td.textContent = r[k] || '';
         td.addEventListener('input', () => { r[k] = td.textContent; touch(); });
         tr.append(td);
       });
-      tr.append(el('td', { class: 'num' }, el('span', { class: 'del-row', onclick: () => { f.revisoes.splice(i, 1); render(); commit('rev'); } }, '✕')));
+      tr.append(el('td', { class: 'rowctl' },
+        rowEye(r, () => { render(); commit('rev'); }),
+        el('span', { class: 'del-row', onclick: () => { f.revisoes.splice(i, 1); render(); commit('rev'); } }, '✕')));
       tb.append(tr);
     });
     const table = el('table', { class: 'fic' },
-      el('thead', {}, el('tr', {}, el('th', { style: { width: '80px' } }, 'Data'), el('th', { style: { width: '120px' } }, 'Usuário'), el('th', {}, 'Alteração realizada'), el('th', { style: { width: '14px' }, html: '&nbsp;' }))), tb);
+      el('thead', {}, el('tr', {}, el('th', { style: { width: '80px' } }, 'Data'), el('th', { style: { width: '120px' } }, 'Usuário'), el('th', {}, 'Alteração realizada'), el('th', { style: { width: '30px' }, html: '&nbsp;' }))), tb);
     sec.append(title, el('div', { class: 'tbl-wrap' }, table));
   };
   render();

@@ -121,6 +121,11 @@ table.fic tr.dragging { opacity: .4; }
 table.fic tr.drop-target td { box-shadow: inset 0 2px 0 var(--accent); }
 table.fic td .del-row { color: #c4c4c4; cursor: pointer; font-weight: 700; }
 table.fic td .del-row:hover { color: var(--danger); }
+table.fic td.rowctl { width: 30px; white-space: nowrap; text-align: center; padding: 0 3px; }
+.row-eye { cursor: pointer; font-size: 9px; opacity: .3; margin-right: 4px; user-select: none; }
+.row-eye:hover { opacity: 1; }
+tr.row-hidden { opacity: .42; }
+tr.row-hidden .row-eye { opacity: .85; }
 .tbl-cols-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
 
 /* Observacoes / assinaturas / revisoes */
@@ -165,14 +170,16 @@ table.fic td .del-row:hover { color: var(--danger); }
 .sline.two .sv:first-of-type { border-right: 1px solid var(--paper-line); }
 .sv:empty::before { content: attr(data-ph); color: #cacaca; font-weight: 400; }
 
-/* Grade de tamanhos / pedido */
-.grade-wrap { border-top: 1px solid var(--paper-line-strong); padding: 3px; }
-table.grade { width: 100%; font-size: 9px; border-collapse: collapse; }
-table.grade th.glabel { background: var(--paper-line-strong); color: #fff; font-size: 7px; width: 42px; text-align: center; letter-spacing: .5px; }
-table.grade td { border: 1px solid var(--paper-line); }
-table.grade td.gsize { background: var(--paper-head); font-weight: 700; text-align: center; min-width: 22px; }
-table.grade td.gqtd { text-align: center; font-weight: 600; }
-table.grade td.gctl { border: none; padding-left: 4px; white-space: nowrap; vertical-align: middle; }
+/* Grade de tamanhos / pedido / zíper — preenche o bloco, separação clara */
+.fic-head2 .hcol { display: flex; flex-direction: column; }
+.grade-wrap { border-top: 1.4px solid var(--paper-line-strong); padding: 0; flex: 1 1 auto; display: flex; }
+table.grade { width: 100%; height: 100%; border-collapse: collapse; table-layout: fixed; }
+table.grade th, table.grade td { border: 1.2px solid var(--paper-line-strong); text-align: center; vertical-align: middle; padding: 3px 2px; }
+table.grade th.glabel { background: #1a1a1a; color: #fff; font-size: 8.5px; width: 56px; letter-spacing: .6px; font-weight: 700; }
+table.grade td.gsize { font-weight: 800; font-size: 13px; }
+table.grade td.gqtd { font-weight: 700; font-size: 12px; }
+table.grade td.gzip { font-weight: 700; font-size: 12px; }
+table.grade td.gctl { border: none; width: 24px; padding: 0 2px; white-space: nowrap; vertical-align: middle; }
 .gbtn { width: 16px; height: 15px; border: 1px solid #bbb; border-radius: 3px; background: #f3f3f3; font-weight: 700; line-height: 1; margin-left: 2px; }
 .gbtn:hover { background: #e3e3e3; }
 

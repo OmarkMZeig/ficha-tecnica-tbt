@@ -26,3 +26,13 @@ function toggleHidden(mod) {
   f.hidden[mod] = !f.hidden[mod];
   commit('load');
 }
+
+// Ocultar LINHA específica (flag _h no próprio objeto da linha).
+export const rowHiddenClass = (row) => (row && row._h ? 'row-hidden' : '');
+export function rowEye(row, onChange) {
+  return el('span', {
+    class: 'row-eye',
+    title: row._h ? 'Linha oculta na entrega ao fornecedor — clique para mostrar' : 'Ocultar esta linha na entrega ao fornecedor',
+    onclick: (e) => { e.stopPropagation(); row._h = !row._h; onChange(); },
+  }, row._h ? '🚫' : '👁');
+}

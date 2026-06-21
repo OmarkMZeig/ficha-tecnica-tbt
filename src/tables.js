@@ -3,7 +3,7 @@
 import { el, $$, toast } from './util.js';
 import { store, commit, touch } from './store.js';
 import { TABLE_DEFS, emptyRow } from './model.js';
-import { blockTitle, sectionClass } from './blocks.js';
+import { blockTitle, sectionClass, rowEye, rowHiddenClass } from './blocks.js';
 
 export function tableSection(tableKey, { compact = false } = {}) {
   const sec = el('section', { class: 'tbl-section', dataset: { table: tableKey } });
@@ -32,12 +32,12 @@ function renderInto(sec, tableKey) {
     el('tr', {},
       el('th', { style: { width: '16px' }, html: '&nbsp;' }),
       ...def.cols.map((c) => el('th', { style: c.w ? { width: c.w } : {} }, c.label)),
-      el('th', { style: { width: '16px' }, html: '&nbsp;' }),
+      el('th', { style: { width: '30px' }, html: '&nbsp;' }),
     ));
   const tbody = el('tbody');
 
   rows.forEach((row, ri) => {
-    const tr = el('tr', { dataset: { ri } });
+    const tr = el('tr', { dataset: { ri }, class: rowHiddenClass(row) });
     // handle de reordenacao (drag)
     const handle = el('td', { class: 'row-handle', title: 'Arraste para reordenar', html: '⠿' });
     handle.draggable = true;
@@ -55,7 +55,8 @@ function renderInto(sec, tableKey) {
       tr.append(td);
     });
 
-    const del = el('td', { class: 'num' },
+    const del = el('td', { class: 'rowctl' },
+      rowEye(row, () => { refresh(tableKey); commit('table'); }),
       el('span', { class: 'del-row', title: 'Excluir linha', onclick: () => removeRow(tableKey, ri) }, '✕'));
     tr.append(del);
 

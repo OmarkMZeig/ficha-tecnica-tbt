@@ -10,7 +10,7 @@
   /* Esconde todo o chrome do app */
   .topbar, .tools, .inspector, .toasts, .text-toolbar, .selbox,
   .modal-backdrop, .block-title .add-row, .row-handle, .del-row, .gctl, .gbtn,
-  .eye-toggle, .mod-hidden,
+  .eye-toggle, .mod-hidden, .row-eye, tr.row-hidden,
   .canvas-scroll::-webkit-scrollbar { display: none !important; }
 
   .workspace, .canvas-scroll { display: block !important; overflow: visible !important; padding: 0 !important; background: #fff !important; }
@@ -47,7 +47,7 @@
 body.exporting .topbar, body.exporting .tools, body.exporting .inspector,
 body.exporting .selbox, body.exporting .text-toolbar,
 body.exporting .block-title .add-row, body.exporting .row-handle, body.exporting .del-row,
-body.exporting .gctl, body.exporting .gbtn, body.exporting .eye-toggle {
+body.exporting .gctl, body.exporting .gbtn, body.exporting .eye-toggle, body.exporting .row-eye {
   visibility: hidden;
 }
-body.exporting .mod-hidden { display: none !important; }
+body.exporting .mod-hidden, body.exporting tr.row-hidden { display: none !important; }

@@ -2,7 +2,7 @@
 // Colunas = tamanhos (de store.current.grade.sizes); linhas = pontos de medida.
 import { el } from './util.js';
 import { store, commit, touch } from './store.js';
-import { blockTitle, sectionClass } from './blocks.js';
+import { blockTitle, sectionClass, rowEye, rowHiddenClass } from './blocks.js';
 
 export function measuresSection() {
   const sec = el('section', { class: 'measures-section', dataset: { measures: '1' } });
@@ -41,18 +41,18 @@ function renderInto(sec) {
       r1.append(el('th', { colspan: '2', class: 'sizehead' }, s || '—'));
       r2.append(el('th', { class: 'subhead' }, 'antes'), el('th', { class: 'subhead' }, 'depois'));
     });
-    r1.append(el('th', { rowspan: '2', style: { width: '14px' }, html: '&nbsp;' }));
+    r1.append(el('th', { rowspan: '2', style: { width: '30px' }, html: '&nbsp;' }));
     thead.append(r1, r2);
   } else {
     const r1 = el('tr', {}, el('th', { class: 'mlabel' }, 'Medida'));
     sizes.forEach((s) => r1.append(el('th', { class: 'sizehead' }, s || '—')));
-    r1.append(el('th', { style: { width: '14px' }, html: '&nbsp;' }));
+    r1.append(el('th', { style: { width: '30px' }, html: '&nbsp;' }));
     thead.append(r1);
   }
 
   const tbody = el('tbody');
   m.rows.forEach((row, ri) => {
-    const tr = el('tr', {});
+    const tr = el('tr', { class: rowHiddenClass(row) });
     const md = el('td', { class: 'mlabel', contenteditable: 'true' });
     md.textContent = row.medida || '';
     md.addEventListener('input', () => { M().rows[ri].medida = md.textContent; touch(); });
@@ -62,7 +62,9 @@ function renderInto(sec) {
       tr.append(cell(ri, ci, 'a'));
       if (ad) tr.append(cell(ri, ci, 'd'));
     });
-    tr.append(el('td', { class: 'num' }, el('span', { class: 'del-row', title: 'Excluir', onclick: () => { M().rows.splice(ri, 1); refreshMeasures(); commit('measures'); } }, '✕')));
+    tr.append(el('td', { class: 'rowctl' },
+      rowEye(row, () => { refreshMeasures(); commit('measures'); }),
+      el('span', { class: 'del-row', title: 'Excluir', onclick: () => { M().rows.splice(ri, 1); refreshMeasures(); commit('measures'); } }, '✕')));
     tbody.append(tr);
   });
 
