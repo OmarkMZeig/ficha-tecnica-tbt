@@ -6,6 +6,7 @@ import { store, touch, commit } from './store.js';
 import { tableSection } from './tables.js';
 import { measuresSection, refreshMeasures } from './measures.js';
 import { brandLogoEl } from './brand.js';
+import { blockTitle, sectionClass } from './blocks.js';
 
 export function renderPage(pageEl) {
   const f = store.current;
@@ -15,6 +16,7 @@ export function renderPage(pageEl) {
     drawingBlock(),
     measuresSection(),
     tablesBlock(),
+    qualidadeBlock(f),
     obsBlock(f),
     revisionsBlock(f),
     signaturesBlock(f),
@@ -44,6 +46,7 @@ function headerBlock(f) {
       el('div', { class: 'ttl' }, 'FICHA TÉCNICA DE PRODUÇÃO'),
       el('div', { class: 'sub two' }, el('span', { class: 'sk' }, 'Coleção'), ed(m, 'colecao', 'Coleção / Estação'))),
     el('div', { class: 'spacer' }),
+    el('div', { class: 'fic-op' }, el('span', { class: 'sk' }, 'OP'), ed(m, 'op', '—', 'sv inline')),
     el('div', { class: 'fic-num' }, el('span', { class: 'sk' }, 'Ficha Nº'), ed(m, 'numero', '0000', 'sv inline')),
     el('div', { class: 'ver-badge' }, 'v', ed(m, 'versao', '1.0', 'sv inline')),
   );
@@ -99,22 +102,26 @@ function gradeBlock(f) {
   const wrap = el('div', { class: 'grade-wrap' });
   const render = () => {
     wrap.innerHTML = '';
+    g.ziper = g.ziper || g.sizes.map(() => '');
     const tbl = el('table', { class: 'grade' });
     const rsz = el('tr', {}, el('th', { class: 'glabel' }, 'GRADE'));
     const rqt = el('tr', {}, el('th', { class: 'glabel' }, 'PEDIDO'));
+    const rzp = el('tr', {}, el('th', { class: 'glabel' }, 'ZÍPER'));
     g.sizes.forEach((sz, i) => {
       const ts = el('td', { class: 'gsize', contenteditable: 'true' }); ts.textContent = sz;
       ts.addEventListener('input', () => { g.sizes[i] = ts.textContent; touch(); refreshMeasures(); });
       const tq = el('td', { class: 'gqtd', contenteditable: 'true' }); tq.textContent = g.qtd[i] || '';
       tq.addEventListener('input', () => { g.qtd[i] = tq.textContent; touch(); });
-      rsz.append(ts); rqt.append(tq);
+      const tz = el('td', { class: 'gzip', contenteditable: 'true' }); tz.textContent = g.ziper[i] || '';
+      tz.addEventListener('input', () => { g.ziper[i] = tz.textContent; touch(); });
+      rsz.append(ts); rqt.append(tq); rzp.append(tz);
     });
-    const ctl = el('td', { class: 'gctl', rowspan: '2' },
-      el('button', { class: 'gbtn', title: 'Adicionar tamanho', onclick: () => { g.sizes.push(''); g.qtd.push(''); render(); commit('grade'); } }, '+'),
-      el('button', { class: 'gbtn', title: 'Remover último', onclick: () => { if (g.sizes.length > 1) { const i = g.sizes.length - 1; g.sizes.pop(); g.qtd.pop(); f.medidas.rows.forEach((r) => { r.a.splice(i, 1); r.d.splice(i, 1); }); render(); refreshMeasures(); commit('grade'); } } }, '−'),
+    const ctl = el('td', { class: 'gctl', rowspan: '3' },
+      el('button', { class: 'gbtn', title: 'Adicionar tamanho', onclick: () => { g.sizes.push(''); g.qtd.push(''); g.ziper.push(''); render(); commit('grade'); } }, '+'),
+      el('button', { class: 'gbtn', title: 'Remover último', onclick: () => { if (g.sizes.length > 1) { const i = g.sizes.length - 1; g.sizes.pop(); g.qtd.pop(); g.ziper.pop(); f.medidas.rows.forEach((r) => { r.a.splice(i, 1); r.d.splice(i, 1); }); render(); refreshMeasures(); commit('grade'); } } }, '−'),
     );
     rsz.append(ctl);
-    tbl.append(rsz, rqt);
+    tbl.append(rsz, rqt, rzp);
     wrap.append(tbl);
   };
   render();
@@ -123,18 +130,17 @@ function gradeBlock(f) {
 
 // ---- Prancheta ----
 function drawingBlock() {
-  return el('section', { class: 'drawing-wrap' },
-    el('div', { class: 'block-title' }, el('span', {}, 'Desenho Técnico / Imagens'),
+  return el('section', { class: sectionClass('drawing-wrap', 'desenho') },
+    blockTitle('Desenho Técnico / Imagens', 'desenho',
       el('span', { style: { fontWeight: '400', opacity: '.75', fontSize: '8.5px' } }, 'arraste imagens e marcações nesta área')),
     el('div', { class: 'drawing-board' }));
 }
 
-// ---- Aviamentos / Materiais / Custos ----
+// ---- Aviamentos / Materiais / Custos (empilhados, largura total) ----
 function tablesBlock() {
   const sec = el('section', {});
-  sec.append(el('div', { class: 'tbl-cols-2' },
-    el('div', {}, tableSection('aviamentos')),
-    el('div', {}, tableSection('materiais'))));
+  sec.append(tableSection('aviamentos'));
+  sec.append(tableSection('materiais'));
   sec.append(tableSection('custos'));
   return sec;
 }
@@ -144,16 +150,50 @@ function obsBlock(f) {
   const box = el('div', { class: 'obs-box', contenteditable: 'true', dataset: { ph: 'Observações técnicas, lavagem, acabamento, bitolas...' } });
   box.textContent = f.observacoes || '';
   box.addEventListener('input', () => { f.observacoes = box.textContent; touch(); });
-  return el('section', {}, el('div', { class: 'block-title' }, el('span', {}, 'Observações')), box);
+  return el('section', { class: sectionClass('', 'observacoes') }, blockTitle('Observações', 'observacoes'), box);
+}
+
+// ---- Controle de Qualidade (defeitos por etapa) ----
+function qualidadeBlock(f) {
+  f.qualidade = f.qualidade || { rows: [] };
+  const sec = el('section', { class: sectionClass('cq-section', 'qualidade') });
+  const render = () => {
+    sec.innerHTML = '';
+    const title = blockTitle('Controle de Qualidade', 'qualidade',
+      el('button', { class: 'add-row', onclick: () => { f.qualidade.rows.push({ etapa: '', verificadas: '', defeitos: '', tipo: '', status: '' }); render(); commit('cq'); } }, '+ etapa'));
+    const cols = [
+      { k: 'etapa', label: 'Etapa', w: '110px' },
+      { k: 'verificadas', label: 'Qtd verificada', w: '78px', c: true },
+      { k: 'defeitos', label: 'Qtd defeito', w: '70px', c: true },
+      { k: 'tipo', label: 'Tipo de defeito' },
+      { k: 'status', label: 'Status', w: '90px' },
+    ];
+    const thead = el('thead', {}, el('tr', {}, ...cols.map((c) => el('th', { style: c.w ? { width: c.w } : {} }, c.label)), el('th', { style: { width: '14px' }, html: '&nbsp;' })));
+    const tb = el('tbody');
+    f.qualidade.rows.forEach((r, i) => {
+      const tr = el('tr', {});
+      cols.forEach((c) => {
+        const td = el('td', { contenteditable: 'true', class: c.c ? 'num' : '' });
+        td.textContent = r[c.k] || '';
+        td.addEventListener('input', () => { r[c.k] = td.textContent; touch(); });
+        tr.append(td);
+      });
+      tr.append(el('td', { class: 'num' }, el('span', { class: 'del-row', onclick: () => { f.qualidade.rows.splice(i, 1); render(); commit('cq'); } }, '✕')));
+      tb.append(tr);
+    });
+    sec.append(title, el('div', { class: 'tbl-wrap' }, el('table', { class: 'fic' }, thead, tb)));
+  };
+  render();
+  return sec;
 }
 
 // ---- Revisoes ----
 function revisionsBlock(f) {
   f.revisoes = f.revisoes || [];
-  const sec = el('section', { class: 'rev-section' });
+  const sec = el('section', { class: sectionClass('rev-section', 'revisoes') });
   const render = () => {
     sec.innerHTML = '';
-    const title = el('div', { class: 'block-title' }, el('span', {}, 'Controle de Revisões'),
+    const title = blockTitle('Controle de Revisões', 'revisoes',
       el('button', { class: 'add-row', onclick: () => { f.revisoes.push({ data: brDate(isoDate()), usuario: f.meta.responsavel || '', alteracao: '' }); render(); commit('rev'); } }, '+ revisão'));
     const tb = el('tbody');
     f.revisoes.forEach((r, i) => {
@@ -184,7 +224,7 @@ function signaturesBlock(f) {
     who.addEventListener('input', () => { f.assinaturas[key] = who.textContent; touch(); });
     return el('div', { class: 'sign-cell' }, el('div', { class: 'line' }), who, el('div', {}, role));
   };
-  return el('section', {}, el('div', { class: 'block-title' }, el('span', {}, 'Aprovações')),
+  return el('section', { class: sectionClass('', 'aprovacoes') }, blockTitle('Aprovações', 'aprovacoes'),
     el('div', { class: 'sign-row' }, cell('modelista', 'Modelista'), cell('aprovacao', 'Aprovação de Amostra'), cell('producao', 'Produção / PCP')));
 }
 

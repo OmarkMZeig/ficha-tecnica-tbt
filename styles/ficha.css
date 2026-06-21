@@ -22,6 +22,20 @@
 .block-title .add-row { color: #fff; font-size: 10px; opacity: .85; }
 .block-title .add-row:hover { opacity: 1; text-decoration: underline; }
 
+/* Modo invisibilidade (ocultar bloco na entrega ao fornecedor) */
+.block-title .bt-right { display: inline-flex; align-items: center; gap: 8px; }
+.eye-toggle { color: #fff; font-size: 9px; font-weight: 600; opacity: .6; background: transparent; padding: 0 2px; }
+.eye-toggle:hover { opacity: 1; }
+.eye-toggle.on { opacity: 1; color: #ffd56b; }
+.mod-hidden { opacity: .5; }
+.mod-hidden .block-title { opacity: 1; }
+
+/* Dark mode: gradiente branco no cabeçalho/grade (não invertido pelo modo escuro) */
+.fic-head, .fic-header { background-color: #fff; background-image: var(--paper-fill); }
+table.grade td.gqtd, table.grade td.gzip { background-image: var(--paper-fill); }
+table.grade td.gsize { background-image: linear-gradient(var(--paper-head), var(--paper-head)); }
+table.grade td.gzip { text-align: center; font-weight: 600; }
+
 /* ---- Cabecalho ---- */
 .fic-header { border: 1.4px solid var(--paper-line-strong); display: grid; grid-template-columns: 1fr; }
 .fic-brandbar { display: flex; align-items: center; gap: 8px; padding: 6px 9px; border-bottom: 1px solid var(--paper-line-strong); }
@@ -125,6 +139,9 @@ table.fic td .del-row:hover { color: var(--danger); }
 .fic-brandbar .blogo { width: auto; height: auto; background: none; color: #111; display: flex; align-items: center; }
 .fic-brandbar .btitles .ttl { font-size: 13px; font-weight: 800; letter-spacing: .4px; }
 .fic-brandbar .btitles .sub.two { display: flex; gap: 6px; align-items: center; font-size: 9px; color: #555; }
+.fic-brandbar .fic-op { display: flex; align-items: center; gap: 4px; background: var(--accent-orange); color: #fff; border-radius: 3px; padding: 2px 10px; margin-right: 6px; }
+.fic-brandbar .fic-op .sk { font-size: 7px; font-weight: 700; color: #fff; opacity: .92; text-transform: uppercase; }
+.fic-brandbar .fic-op .sv.inline { font-weight: 800; font-size: 13px; color: #fff; min-width: 24px; outline: none; }
 .fic-brandbar .fic-num { display: flex; align-items: center; gap: 4px; border: 1px solid var(--paper-line-strong); border-radius: 3px; padding: 2px 8px; margin-right: 6px; }
 .fic-brandbar .fic-num .sk { font-size: 7px; font-weight: 700; text-transform: uppercase; color: #666; }
 .fic-brandbar .fic-num .sv.inline { font-weight: 800; font-size: 12px; min-width: 30px; outline: none; }

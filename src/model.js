@@ -78,6 +78,12 @@ export function newSpecs() {
   };
 }
 
+// Controle de qualidade: defeitos por etapa de produção.
+export const QUALIDADE_ETAPAS = ['Matéria Prima', 'Corte', 'Costura', 'Lavanderia', 'Acabamento'];
+export function newQualidade() {
+  return { rows: QUALIDADE_ETAPAS.map((etapa) => ({ etapa, verificadas: '', defeitos: '', tipo: '', status: '' })) };
+}
+
 export function newFicha(overrides = {}) {
   const now = new Date();
   const f = {
@@ -86,24 +92,26 @@ export function newFicha(overrides = {}) {
       // nucleo (usado na Biblioteca/busca/duplicar)
       referencia: '', descricao: '', marca: '', cliente: '',
       colecao: '', categoria: 'Calça Jeans', codigoInterno: '',
-      responsavel: '', data: brDate(isoDate(now)), versao: '1.0', pecaPiloto: '', numero: '',
+      responsavel: '', data: brDate(isoDate(now)), versao: '1.0', pecaPiloto: '', numero: '', op: '',
       // produto (bloco direito do cabecalho)
       produto: '', grupo: '', modelagem: '', tipoProduto: '',
       familia: '', oc: '', prod: '', mNum: '',
     },
     specs: newSpecs(),
-    grade: { sizes: [...DEFAULT_SIZES], qtd: DEFAULT_SIZES.map(() => '') },
+    grade: { sizes: [...DEFAULT_SIZES], qtd: DEFAULT_SIZES.map(() => ''), ziper: DEFAULT_SIZES.map(() => '') },
     medidas: newMeasures(),
     board: { objects: [], numberSeq: 0 },
     tables: {
-      aviamentos: emptyRows('aviamentos', 4),
-      materiais: emptyRows('materiais', 2),
+      aviamentos: emptyRows('aviamentos', 6),
+      materiais: emptyRows('materiais', 3),
       custos: emptyRows('custos', 4),
     },
+    qualidade: newQualidade(),
     observacoes: '',
     revisoes: [],
     assinaturas: { modelista: '', aprovacao: '', producao: '' },
     footer: { oficina: '', desenho: '', modelagem: '', fichaTecnica: '' },
+    hidden: {},
     createdAt: now.toISOString(),
     updatedAt: now.toISOString(),
     thumb: null,
@@ -126,7 +134,10 @@ export function ensureShape(f) {
   if (!f.specs) f.specs = {}; f.specs = { ...base.specs, ...f.specs };
   if (!f.grade || !Array.isArray(f.grade.sizes)) f.grade = base.grade;
   if (!f.grade.qtd) f.grade.qtd = f.grade.sizes.map(() => '');
+  if (!f.grade.ziper) f.grade.ziper = f.grade.sizes.map(() => '');
   if (!f.medidas || !Array.isArray(f.medidas.rows)) f.medidas = base.medidas;
+  if (!f.qualidade || !Array.isArray(f.qualidade.rows)) f.qualidade = newQualidade();
+  if (!f.hidden || typeof f.hidden !== 'object') f.hidden = {};
   if (!f.board) f.board = base.board;
   if (!f.tables) f.tables = base.tables;
   for (const k of TABLE_KEYS) if (!Array.isArray(f.tables[k])) f.tables[k] = emptyRows(k, 2);

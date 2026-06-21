@@ -3,6 +3,7 @@
 import { el, $$, toast } from './util.js';
 import { store, commit, touch } from './store.js';
 import { TABLE_DEFS, emptyRow } from './model.js';
+import { blockTitle, sectionClass } from './blocks.js';
 
 export function tableSection(tableKey, { compact = false } = {}) {
   const sec = el('section', { class: 'tbl-section', dataset: { table: tableKey } });
@@ -21,11 +22,10 @@ function renderInto(sec, tableKey) {
   const def = TABLE_DEFS[tableKey];
   const rows = rowsOf(tableKey);
   sec.innerHTML = '';
+  sec.className = sectionClass('tbl-section', tableKey);
 
-  const title = el('div', { class: 'block-title' },
-    el('span', {}, def.title),
-    el('button', { class: 'add-row', onclick: () => addRow(tableKey) }, '+ linha'),
-  );
+  const title = blockTitle(def.title, tableKey,
+    el('button', { class: 'add-row', onclick: () => addRow(tableKey) }, '+ linha'));
 
   const table = el('table', { class: 'fic' });
   const thead = el('thead', {},

@@ -2,6 +2,7 @@
 // Colunas = tamanhos (de store.current.grade.sizes); linhas = pontos de medida.
 import { el } from './util.js';
 import { store, commit, touch } from './store.js';
+import { blockTitle, sectionClass } from './blocks.js';
 
 export function measuresSection() {
   const sec = el('section', { class: 'measures-section', dataset: { measures: '1' } });
@@ -21,13 +22,12 @@ function renderInto(sec) {
   const m = M();
   const sizes = SIZES();
   sec.innerHTML = '';
+  sec.className = sectionClass('measures-section', 'medidas');
 
-  const title = el('div', { class: 'block-title' },
-    el('span', {}, 'Tabela de Medidas (cm)'),
+  const title = blockTitle('Tabela de Medidas (cm)', 'medidas',
     el('span', { style: { display: 'flex', gap: '10px' } },
       el('button', { class: 'add-row', onclick: toggleAD }, m.antesDepois ? 'antes/depois ✓' : 'antes/depois'),
-      el('button', { class: 'add-row', onclick: addMeasure }, '+ medida'),
-    ));
+      el('button', { class: 'add-row', onclick: addMeasure }, '+ medida')));
 
   const table = el('table', { class: 'fic measures' });
   const ad = m.antesDepois;
