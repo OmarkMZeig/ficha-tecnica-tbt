@@ -32,9 +32,12 @@
 
 /* Dark mode: gradiente branco no cabeçalho/grade (não invertido pelo modo escuro) */
 .fic-head, .fic-header { background-color: #fff; background-image: var(--paper-fill); }
-table.grade td.gqtd, table.grade td.gzip { background-image: var(--paper-fill); }
+table.grade td.gqtd { background-image: var(--paper-fill); }
+table.grade td.gzip { background-image: linear-gradient(#e7ebf2, #e7ebf2); } /* tom distinto do PEDIDO (branco) */
 table.grade td.gsize { background-image: linear-gradient(var(--paper-head), var(--paper-head)); }
-table.grade td.gzip { text-align: center; font-weight: 600; }
+/* BARREIRA real entre PEDIDO e ZÍPER (evita confundir os números) */
+table.grade tr.ziper-row > th, table.grade tr.ziper-row > td { border-top: 3px solid #1a1a1a; }
+table.grade tr.ziper-row > th.glabel { background: #444; }
 
 /* ---- Cabecalho ---- */
 .fic-header { border: 1.4px solid var(--paper-line-strong); display: grid; grid-template-columns: 1fr; }

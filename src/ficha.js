@@ -106,7 +106,7 @@ function gradeBlock(f) {
     const tbl = el('table', { class: 'grade' });
     const rsz = el('tr', {}, el('th', { class: 'glabel' }, 'GRADE'));
     const rqt = el('tr', {}, el('th', { class: 'glabel' }, 'PEDIDO'));
-    const rzp = el('tr', {}, el('th', { class: 'glabel' }, 'ZÍPER'));
+    const rzp = el('tr', { class: 'ziper-row' }, el('th', { class: 'glabel' }, 'ZÍPER'));
     g.sizes.forEach((sz, i) => {
       const ts = el('td', { class: 'gsize', contenteditable: 'true' }); ts.textContent = sz;
       ts.addEventListener('input', () => { g.sizes[i] = ts.textContent; touch(); refreshMeasures(); });
