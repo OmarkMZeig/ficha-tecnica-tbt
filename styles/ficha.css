@@ -5,7 +5,7 @@
   color-scheme: light; /* a folha é sempre clara, mesmo com dark mode do navegador */
   font-family: var(--font-paper);
   box-shadow: var(--shadow-page);
-  padding: var(--page-pad);
+  padding: 8mm 6mm;
   position: relative;
   flex: 0 0 auto;
   --page-scale: 1;
@@ -187,7 +187,12 @@ table.grade td.gctl { border: none; width: 24px; padding: 0 2px; white-space: no
 .gbtn:hover { background: #e3e3e3; }
 
 /* ====== Medidas antes/depois ====== */
-table.fic.measures th.mlabel, table.fic.measures td.mlabel { text-align: left; font-weight: 700; }
+/* largura travada: nunca ultrapassa a folha, mesmo com 18 colunas */
+table.fic.measures { table-layout: fixed; width: 100%; }
+table.fic.measures th, table.fic.measures td { padding: 2px 1px; font-size: 8px; overflow: hidden; }
+table.fic.measures td.num { font-size: 8.5px; }
+table.fic.measures th.subhead { font-size: 6.5px; letter-spacing: 0; }
+table.fic.measures th.mlabel, table.fic.measures td.mlabel { text-align: left; font-weight: 700; width: 60px; padding-left: 4px; font-size: 8.5px; }
 table.fic.measures th.sizehead { background: var(--accent-orange); color: #fff; border-color: #c75518; }
 table.fic.measures th.subhead { color: #fff; font-size: 7px; }
 /* Separação acentuada: barreira grossa entre tamanhos + cores por coluna */
