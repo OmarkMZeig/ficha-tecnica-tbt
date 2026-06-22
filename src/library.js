@@ -9,7 +9,9 @@ let onOpen = () => {};
 let all = [];
 let q = '';
 let fCat = '';
+let fTipo = 'producao'; // 'producao' | 'piloto'
 const selected = new Set();
+const tipoOf = (f) => (f.meta.tipo === 'piloto' ? 'piloto' : 'producao');
 
 export function initLibrary(element, { open }) { libEl = element; onOpen = open; }
 
@@ -21,6 +23,7 @@ export async function refreshLibrary() {
 function matches(f) {
   const hay = [f.meta.referencia, f.meta.marca, f.meta.cliente, f.meta.colecao, f.meta.categoria, f.meta.descricao, f.meta.produto, f.meta.familia, f.meta.oc, f.meta.numero]
     .join(' ').toLowerCase();
+  if (tipoOf(f) !== fTipo) return false;
   if (q && !hay.includes(q.toLowerCase())) return false;
   if (fCat && f.meta.categoria !== fCat) return false;
   return true;
@@ -28,6 +31,18 @@ function matches(f) {
 
 function render() {
   libEl.innerHTML = '';
+
+  // Separação Produção / Piloto (numeração e ordens diferentes)
+  const nProd = all.filter((f) => tipoOf(f) === 'producao').length;
+  const nPil = all.filter((f) => tipoOf(f) === 'piloto').length;
+  const tabs = el('div', { class: 'lib-tabs' });
+  const mkTab = (key, label) => {
+    const b = el('button', { class: 'lib-tab' + (fTipo === key ? ' active' : ''), onclick: () => { fTipo = key; selected.clear(); render(); } }, label);
+    return b;
+  };
+  tabs.append(mkTab('producao', `🏭 Produção (${nProd})`), mkTab('piloto', `🧪 Piloto (${nPil})`));
+  libEl.append(tabs);
+
   const head = el('div', { class: 'lib-head' });
   const search = el('input', { class: 'search', placeholder: '🔍  Buscar por nº, referência, marca, cliente, coleção...', value: q });
   search.addEventListener('input', () => { q = search.value; renderCards(); });

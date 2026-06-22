@@ -189,7 +189,14 @@ table.grade td.gctl { border: none; width: 24px; padding: 0 2px; white-space: no
 /* ====== Medidas antes/depois ====== */
 table.fic.measures th.mlabel, table.fic.measures td.mlabel { text-align: left; font-weight: 700; }
 table.fic.measures th.sizehead { background: var(--accent-orange); color: #fff; border-color: #c75518; }
-table.fic.measures th.subhead { background: #f0a072; color: #fff; font-size: 7px; border-color: #e0905f; }
+table.fic.measures th.subhead { color: #fff; font-size: 7px; }
+/* Separação acentuada: barreira grossa entre tamanhos + cores por coluna */
+table.fic.measures th.gstart, table.fic.measures td.gstart { border-left: 2.5px solid #1a1a1a; }
+table.fic.measures th.sub-e { background: #2f6fed; }   /* Esperado = azul */
+table.fic.measures th.sub-a { background: #e0651f; }   /* Antes = laranja */
+table.fic.measures th.sub-d { background: #a8481a; }   /* Depois = laranja escuro */
+table.fic.measures td.col-e { background-image: linear-gradient(#e9f0ff, #e9f0ff); } /* esperado leve azul */
+table.fic.measures td.col-d { background-image: linear-gradient(#fbeadf, #fbeadf); } /* depois leve laranja */
 
 /* ====== Rodape responsaveis ====== */
 .fic-foot2 { display: grid; grid-template-columns: repeat(4, 1fr); border: 1.4px solid var(--paper-line-strong); border-top: none; background-color: #ffffff; background-image: var(--paper-fill); }

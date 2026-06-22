@@ -149,6 +149,10 @@ body { background: var(--bg-app); color: var(--text); overflow: hidden; }
 .library .search { flex: 1; height: 40px; padding: 0 14px; border-radius: var(--r-md); background: var(--bg-panel); border: 1px solid var(--border); color: var(--text); font-size: 14px; }
 .library .filters { display: flex; gap: 8px; }
 .library .filters select { height: 40px; padding: 0 10px; border-radius: var(--r-md); background: var(--bg-panel); border: 1px solid var(--border); color: var(--text); }
+.lib-tabs { display: flex; gap: 8px; max-width: 1100px; margin: 0 auto var(--sp-4); }
+.lib-tab { height: 38px; padding: 0 20px; border-radius: var(--r-md); background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-dim); font-weight: 600; font-size: 13.5px; }
+.lib-tab:hover { color: var(--text); }
+.lib-tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--sp-4); max-width: 1100px; margin-inline: auto; }
 .card { position: relative; background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; cursor: pointer; transition: border-color .12s, transform .12s; }
 .card:hover { border-color: var(--accent); transform: translateY(-2px); }

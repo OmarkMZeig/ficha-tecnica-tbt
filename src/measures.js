@@ -32,21 +32,24 @@ function renderInto(sec) {
   const table = el('table', { class: 'fic measures' });
   const ad = m.antesDepois;
 
-  // Cabecalho
+  // Cabecalho — por tamanho: Esperado / Antes / Depois (ou só Esperado)
   const thead = el('thead');
   if (ad) {
     const r1 = el('tr', {}, el('th', { class: 'mlabel', rowspan: '2' }, 'Medida'));
     const r2 = el('tr', {});
-    sizes.forEach((s, i) => {
-      r1.append(el('th', { colspan: '2', class: 'sizehead' }, s || '—'));
-      r2.append(el('th', { class: 'subhead' }, 'antes'), el('th', { class: 'subhead' }, 'depois'));
+    sizes.forEach((s) => {
+      r1.append(el('th', { colspan: '3', class: 'sizehead gstart' }, s || '—'));
+      r2.append(
+        el('th', { class: 'subhead sub-e gstart' }, 'Esper.'),
+        el('th', { class: 'subhead sub-a' }, 'Antes'),
+        el('th', { class: 'subhead sub-d' }, 'Depois'));
     });
-    r1.append(el('th', { rowspan: '2', style: { width: '30px' }, html: '&nbsp;' }));
+    r1.append(el('th', { rowspan: '2', class: 'gstart', style: { width: '30px' }, html: '&nbsp;' }));
     thead.append(r1, r2);
   } else {
     const r1 = el('tr', {}, el('th', { class: 'mlabel' }, 'Medida'));
-    sizes.forEach((s) => r1.append(el('th', { class: 'sizehead' }, s || '—')));
-    r1.append(el('th', { style: { width: '30px' }, html: '&nbsp;' }));
+    sizes.forEach((s) => r1.append(el('th', { class: 'sizehead gstart' }, (s || '—') + ' esp.')));
+    r1.append(el('th', { class: 'gstart', style: { width: '30px' }, html: '&nbsp;' }));
     thead.append(r1);
   }
 
@@ -59,10 +62,10 @@ function renderInto(sec) {
     tr.append(md);
 
     sizes.forEach((s, ci) => {
-      tr.append(cell(ri, ci, 'a'));
-      if (ad) tr.append(cell(ri, ci, 'd'));
+      tr.append(cell(ri, ci, 'e', 'gstart'));
+      if (ad) { tr.append(cell(ri, ci, 'a')); tr.append(cell(ri, ci, 'd')); }
     });
-    tr.append(el('td', { class: 'rowctl' },
+    tr.append(el('td', { class: 'rowctl gstart' },
       rowEye(row, () => { refreshMeasures(); commit('measures'); }),
       el('span', { class: 'del-row', title: 'Excluir', onclick: () => { M().rows.splice(ri, 1); refreshMeasures(); commit('measures'); } }, '✕')));
     tbody.append(tr);
@@ -72,16 +75,15 @@ function renderInto(sec) {
   sec.append(title, el('div', { class: 'tbl-wrap' }, table));
 }
 
-function cell(ri, ci, which) {
-  const td = el('td', { class: 'num', contenteditable: 'true' });
-  const arr = M().rows[ri][which];
-  td.textContent = (arr && arr[ci]) || '';
+function cell(ri, ci, which, extra) {
+  const td = el('td', { class: 'num col-' + which + (extra ? ' ' + extra : ''), contenteditable: 'true' });
+  const arr = M().rows[ri][which] || (M().rows[ri][which] = []);
+  td.textContent = arr[ci] || '';
   td.addEventListener('input', () => {
-    const a = M().rows[ri][which] || (M().rows[ri][which] = []);
-    a[ci] = td.textContent; touch();
+    (M().rows[ri][which] || (M().rows[ri][which] = []))[ci] = td.textContent; touch();
   });
   return td;
 }
 
-function addMeasure() { M().rows.push({ medida: '', a: [], d: [] }); refreshMeasures(); commit('measures'); }
+function addMeasure() { M().rows.push({ medida: '', e: [], a: [], d: [] }); refreshMeasures(); commit('measures'); }
 function toggleAD() { M().antesDepois = !M().antesDepois; refreshMeasures(); commit('measures'); }

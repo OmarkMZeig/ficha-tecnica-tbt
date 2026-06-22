@@ -52,11 +52,11 @@ export function emptyRows(tableKey, n) {
 // Pontos de medida padrao de uma calca jeans (linhas da grade de medidas).
 export const MEASURE_ROWS = ['Cintura', 'Quadril', 'Gancho Frente', 'Gancho Costa', 'Coxa', 'Joelho', 'Barra', 'Entreperna'];
 
-// a[] e d[] sao alinhados por INDICE a grade.sizes (sobrevive a renomear tamanho).
+// e[]/a[]/d[] (esperado/antes/depois) alinhados por INDICE a grade.sizes.
 export function newMeasures() {
   return {
     antesDepois: true,
-    rows: MEASURE_ROWS.map((m) => ({ medida: m, a: [], d: [] })),
+    rows: MEASURE_ROWS.map((m) => ({ medida: m, e: [], a: [], d: [] })),
   };
 }
 export const DEFAULT_SIZES = ['36', '38', '40', '42', '44', '46'];
@@ -92,7 +92,7 @@ export function newFicha(overrides = {}) {
       // nucleo (usado na Biblioteca/busca/duplicar)
       referencia: '', descricao: '', marca: '', cliente: '',
       colecao: '', categoria: 'Calça Jeans', codigoInterno: '',
-      responsavel: '', data: brDate(isoDate(now)), versao: '1.0', pecaPiloto: '', numero: '', op: '',
+      responsavel: '', data: brDate(isoDate(now)), versao: '1.0', pecaPiloto: '', numero: '', op: '', tipo: 'producao',
       // produto (bloco direito do cabecalho)
       produto: '', grupo: '', modelagem: '', tipoProduto: '',
       familia: '', oc: '', prod: '', mNum: '',
@@ -136,6 +136,7 @@ export function ensureShape(f) {
   if (!f.grade.qtd) f.grade.qtd = f.grade.sizes.map(() => '');
   if (!f.grade.ziper) f.grade.ziper = f.grade.sizes.map(() => '');
   if (!f.medidas || !Array.isArray(f.medidas.rows)) f.medidas = base.medidas;
+  f.medidas.rows.forEach((r) => { if (!Array.isArray(r.e)) r.e = []; });
   if (!f.qualidade || !Array.isArray(f.qualidade.rows)) f.qualidade = newQualidade();
   if (!f.hidden || typeof f.hidden !== 'object') f.hidden = {};
   if (!f.board) f.board = base.board;

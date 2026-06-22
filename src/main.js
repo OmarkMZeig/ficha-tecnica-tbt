@@ -83,14 +83,33 @@ function switchView(v) {
 
 // ---------------- Menus ----------------
 function openTemplatePicker() {
+  let tipo = 'producao';
+  const seg = el('div', { class: 'seg', style: { display: 'inline-flex', marginBottom: '14px' } });
+  const bProd = el('button', { class: 'active' }, '🏭 Produção');
+  const bPil = el('button', {}, '🧪 Piloto');
+  bProd.onclick = () => { tipo = 'producao'; bProd.classList.add('active'); bPil.classList.remove('active'); };
+  bPil.onclick = () => { tipo = 'piloto'; bPil.classList.add('active'); bProd.classList.remove('active'); };
+  seg.append(bProd, bPil);
+
   const grid = el('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' } });
   for (const tpl of TEMPLATES) {
     const card = el('button', { class: 'btn ghost', style: { height: 'auto', padding: '16px 10px', flexDirection: 'column', gap: '6px', fontSize: '13px' } },
       el('div', { style: { fontSize: '26px' } }, tpl.icon), el('div', { text: tpl.nome }));
-    card.onclick = async () => { m.close(); const fic = tpl.build(); fic.meta.numero = await nextFichaNumber(); await createNew(fic); switchView('editor'); toast(`Nova ficha Nº ${fic.meta.numero}: ${tpl.nome}`, 'ok'); };
+    card.onclick = async () => {
+      m.close();
+      const fic = tpl.build();
+      fic.meta.tipo = tipo;
+      fic.meta.numero = await nextFichaNumber(tipo);
+      await createNew(fic);
+      switchView('editor');
+      toast(`Nova ficha ${tipo === 'piloto' ? 'PILOTO' : 'de produção'} Nº ${fic.meta.numero}`, 'ok');
+    };
     grid.append(card);
   }
-  const m = modal({ title: 'Nova ficha — escolha um modelo', body: grid, width: '520px' });
+  const body = el('div', {},
+    el('p', { class: 'hint', style: { marginBottom: '6px' } }, 'A ficha é de produção ou de piloto? (numeração separada — piloto termina com “P”)'),
+    seg, grid);
+  const m = modal({ title: 'Nova ficha', body, width: '520px' });
 }
 
 function openNewVersion() {

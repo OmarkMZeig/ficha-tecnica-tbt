@@ -122,7 +122,7 @@ export async function duplicateCurrent() {
   copy.revisoes = [];
   copy.createdAt = new Date().toISOString();
   copy.updatedAt = copy.createdAt;
-  copy.meta.numero = await nextFichaNumber();
+  copy.meta.numero = await nextFichaNumber(copy.meta.tipo);
   current = copy;
   await backend.save(current);
   emit('load');
@@ -140,12 +140,14 @@ export async function newVersionCurrent(note = '') {
   return current;
 }
 
-// Numeração automática de ficha (contador local sequencial, zero à esquerda).
-export async function nextFichaNumber() {
-  let n = (await db.getMeta('fichaSeq')) || 0;
+// Numeração automática — contadores SEPARADOS por tipo. Piloto sai com "P" no fim.
+export async function nextFichaNumber(tipo = 'producao') {
+  const key = tipo === 'piloto' ? 'fichaSeqPiloto' : 'fichaSeq';
+  let n = (await db.getMeta(key)) || 0;
   n += 1;
-  await db.setMeta('fichaSeq', n);
-  return String(n).padStart(4, '0');
+  await db.setMeta(key, n);
+  const s = String(n).padStart(4, '0');
+  return tipo === 'piloto' ? s + 'P' : s;
 }
 
 export async function removeFicha(id) { await backend.remove(id); if (current && current.id === id) current = null; }
