@@ -34,6 +34,39 @@ export function onAuth(cb) { if (!initCloud()) return () => {}; return auth.onAu
 export function currentUser() { return auth && auth.currentUser; }
 export function login(email, senha) { initCloud(); return auth.signInWithEmailAndPassword(email, senha); }
 export function logout() { return auth ? auth.signOut() : Promise.resolve(); }
+export function currentEmail() { return auth && auth.currentUser ? auth.currentUser.email : null; }
+
+// ---- Controle de acessos (master cria logins) ----
+let _master = undefined; // undefined=não carregado, null=sem master ainda, string=email
+export async function loadMaster() {
+  initCloud();
+  try { const d = await fs.collection('config').doc('app').get(); _master = d.exists ? (d.data().masterEmail || null) : null; }
+  catch (e) { _master = null; }
+  return _master;
+}
+export const masterEmail = () => _master;
+export const noMasterYet = () => _master === null;
+export function isMaster() {
+  const e = currentEmail();
+  return !!e && !!_master && e.toLowerCase() === String(_master).toLowerCase();
+}
+export async function claimMaster() {
+  initCloud();
+  const e = currentEmail();
+  if (!e) throw new Error('Faça login primeiro.');
+  await fs.collection('config').doc('app').set({ masterEmail: e }, { merge: true });
+  _master = e;
+  return e;
+}
+// Cria um login SEM deslogar o master (usa um app Firebase secundário).
+export async function createUser(email, senha) {
+  initCloud();
+  const fb = window.firebase;
+  const sec = (fb.apps || []).find((a) => a.name === 'userCreator') || fb.initializeApp(CONFIG, 'userCreator');
+  const cred = await sec.auth().createUserWithEmailAndPassword(email.trim(), senha);
+  try { await sec.auth().signOut(); } catch (e) { /* ok */ }
+  return cred.user.email;
+}
 
 // ---- Fichas (Firestore) ----
 const clean = (f) => JSON.parse(JSON.stringify(f));
@@ -95,7 +128,10 @@ async function toStorableDataURL(blob) {
 export const friendlyError = (e) => {
   const m = (e && e.code) || '';
   if (m.includes('wrong-password') || m.includes('invalid-credential')) return 'E-mail ou senha incorretos.';
-  if (m.includes('user-not-found')) return 'Usuário não encontrado. Crie no Firebase Console.';
+  if (m.includes('user-not-found')) return 'Usuário não encontrado. Peça ao master para criar o acesso.';
+  if (m.includes('email-already-in-use')) return 'Este e-mail já tem acesso.';
+  if (m.includes('invalid-email')) return 'E-mail inválido.';
+  if (m.includes('weak-password')) return 'Senha muito curta (mínimo 6 caracteres).';
   if (m.includes('network')) return 'Sem conexão com a internet.';
   if (m.includes('too-many-requests')) return 'Muitas tentativas. Aguarde um pouco.';
   return (e && e.message) || 'Falha ao conectar à nuvem.';

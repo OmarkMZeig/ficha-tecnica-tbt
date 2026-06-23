@@ -236,19 +236,49 @@ function openCloudLogin() {
 
 function openCloudMenu() {
   const u = cloud.currentUser();
+  const ehMaster = cloud.isMaster();
+  const semMaster = cloud.noMasterYet();
   const body = el('div', { style: { display: 'flex', flexDirection: 'column', gap: '8px' } },
-    el('p', { class: 'hint' }, `Conectado como ${u && u.email}. Modo atual: ${getMode() === 'cloud' ? 'NUVEM (compartilhado)' : 'LOCAL'}.`),
+    el('p', { class: 'hint' }, `Conectado como ${u && u.email}${ehMaster ? ' (MASTER)' : ''}. Modo: ${getMode() === 'cloud' ? 'NUVEM (compartilhado)' : 'LOCAL'}.`),
+    ehMaster ? bigBtn('👤  Gerenciar acessos (criar logins)', 'Crie logins para a equipe — cada um entra com a própria senha.', () => { m.close(); openManageUsers(); }) : null,
+    (!ehMaster && semMaster) ? bigBtn('⭐  Definir minha conta como MASTER', 'Você passa a controlar quem cria/tem acesso.', async () => { m.close(); try { await cloud.claimMaster(); toast('Sua conta agora é a master', 'ok'); } catch (e) { toast(cloud.friendlyError(e), 'err'); } }) : null,
     getMode() !== 'cloud' ? bigBtn('☁  Usar a nuvem agora', 'Carrega as fichas compartilhadas da equipe.', async () => { m.close(); await enterCloud(); }) : null,
     bigBtn('💻  Voltar ao modo local', 'Usa só as fichas deste computador.', async () => { m.close(); await setBackendMode('local'); await reloadForMode(); updateCloudUI(); toast('Modo local', 'ok'); }),
     bigBtn('🚪  Sair da conta', 'Desconecta a nuvem.', async () => { m.close(); await cloud.logout(); await setBackendMode('local'); await reloadForMode(); updateCloudUI(); toast('Desconectado', 'ok'); }),
   );
-  const m = modal({ title: '☁ Nuvem', body, width: '440px' });
+  const m = modal({ title: '☁ Nuvem', body, width: '460px' });
+}
+
+function openManageUsers() {
+  const email = el('input', { type: 'email', placeholder: 'email@empresa.com', style: inputCss });
+  const senha = el('input', { type: 'text', placeholder: 'Senha (mínimo 6 caracteres)', style: inputCss });
+  const msg = el('div', { class: 'hint', style: { minHeight: '16px', marginTop: '6px' } });
+  const ok = el('button', { class: 'btn primary' }, 'Criar acesso');
+  const body = el('div', {},
+    el('p', { class: 'hint', style: { marginBottom: '10px' } }, 'Crie um login para alguém da equipe. A pessoa entra com este e-mail e senha (no botão ☁ Entrar) e acessa as fichas compartilhadas — sem precisar da sua credencial.'),
+    el('div', { class: 'field' }, el('label', { text: 'E-mail do novo acesso' }), email),
+    el('div', { class: 'field' }, el('label', { text: 'Senha inicial' }), senha),
+    msg,
+    el('p', { class: 'hint', style: { marginTop: '8px' } }, 'Para remover um acesso ou redefinir senha, use o Firebase Console (Authentication).'));
+  const m = modal({ title: '👤 Gerenciar acessos', body, width: '440px', footer: [el('button', { class: 'btn ghost', onclick: () => m.close() }, 'Fechar'), ok] });
+  ok.onclick = async () => {
+    const e = email.value.trim(); const s = senha.value;
+    if (!e || s.length < 6) { msg.textContent = 'Informe um e-mail e uma senha de pelo menos 6 caracteres.'; msg.style.color = 'var(--danger)'; return; }
+    ok.disabled = true; msg.style.color = 'var(--text-dim)'; msg.textContent = 'Criando...';
+    try {
+      await cloud.createUser(e, s);
+      msg.style.color = 'var(--ok)'; msg.textContent = `✓ Acesso criado para ${e}. Já pode entrar.`;
+      email.value = ''; senha.value = ''; ok.disabled = false;
+    } catch (err) { msg.style.color = 'var(--danger)'; msg.textContent = cloud.friendlyError(err); ok.disabled = false; }
+  };
+  setTimeout(() => email.focus(), 50);
 }
 
 async function enterCloud() {
   try {
     await setBackendMode('cloud');
     await reloadForMode();
+    await cloud.loadMaster().catch(() => {});
     updateCloudUI();
     toast('Conectado à nuvem — fichas compartilhadas', 'ok');
   } catch (e) { console.error(e); toast('Erro ao carregar nuvem: ' + (e.message || e), 'err'); }
@@ -418,6 +448,7 @@ async function init() {
   // Nuvem: reflete login e auto-entra se a preferência salva for "cloud"
   if (cloud.cloudAvailable()) {
     cloud.onAuth(async (user) => {
+      if (user) await cloud.loadMaster().catch(() => {});
       updateCloudUI();
       const pref = await db.getMeta('mode');
       if (user && pref === 'cloud' && getMode() !== 'cloud') await enterCloud();
