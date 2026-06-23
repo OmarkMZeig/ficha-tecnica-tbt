@@ -71,11 +71,22 @@ export async function setBackendMode(m) {
   await db.setMeta('mode', m);
 }
 
+// ---------------- Histórico (nuvem) ----------------
+// Edições contínuas viram UMA entrada "editou" por ficha, ~12s após a última alteração.
+const _editTimers = new Map();
+function scheduleEditLog(f) {
+  if (mode !== 'cloud' || !f || !f.id) return;
+  const id = f.id;
+  if (_editTimers.has(id)) clearTimeout(_editTimers.get(id));
+  const snap = { id, meta: { referencia: f.meta?.referencia || '', numero: f.meta?.numero || '' } };
+  _editTimers.set(id, setTimeout(() => { _editTimers.delete(id); cloud.logActivity('editou', snap); }, 12000));
+}
+
 // ---------------- Persistência ----------------
 const persist = debounce(async () => {
   if (!current) return;
   current.updatedAt = new Date().toISOString();
-  try { await backend.save(current); } catch (e) { console.error('Falha ao salvar', e); }
+  try { await backend.save(current); scheduleEditLog(current); } catch (e) { console.error('Falha ao salvar', e); }
 }, 600);
 
 export function commit(reason = 'edit') { persist(); emit(reason); }
@@ -83,9 +94,10 @@ export function touch() { persist(); }
 export async function saveNow() { if (!current) return; current.updatedAt = new Date().toISOString(); await backend.save(current); }
 
 // ---------------- Ciclo de vida ----------------
-export async function createNew(ficha = newFicha()) {
+export async function createNew(ficha = newFicha(), { log = false } = {}) {
   current = ficha;
   await backend.save(current);
+  if (log && mode === 'cloud') cloud.logActivity('criou', current);
   emit('load');
   return current;
 }
@@ -125,6 +137,7 @@ export async function duplicateCurrent() {
   copy.meta.numero = await nextFichaNumber(copy.meta.tipo);
   current = copy;
   await backend.save(current);
+  if (mode === 'cloud') cloud.logActivity('duplicou', current, `cópia de ${current.meta.referencia || ''}`);
   emit('load');
   return current;
 }
@@ -136,6 +149,7 @@ export async function newVersionCurrent(note = '') {
   current.revisoes = current.revisoes || [];
   current.revisoes.push({ data: isoDate(), usuario: current.meta.responsavel || '', alteracao: note || `Nova versão ${current.meta.versao}` });
   await saveNow();
+  if (mode === 'cloud') cloud.logActivity('nova versão', current, `v${current.meta.versao}`);
   emit('load');
   return current;
 }
@@ -150,7 +164,13 @@ export async function nextFichaNumber(tipo = 'producao') {
   return tipo === 'piloto' ? s + 'P' : s;
 }
 
-export async function removeFicha(id) { await backend.remove(id); if (current && current.id === id) current = null; }
+export async function removeFicha(id) {
+  let snap = null;
+  if (mode === 'cloud') { try { const f = await backend.get(id); if (f) snap = { id, meta: f.meta }; } catch (_) { /* ok */ } }
+  await backend.remove(id);
+  if (snap) cloud.logActivity('excluiu', snap);
+  if (current && current.id === id) current = null;
+}
 export const listFichas = () => backend.list();
 
 // ---------------- Imagens ----------------

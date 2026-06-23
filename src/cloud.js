@@ -12,6 +12,8 @@ const CONFIG = {
 };
 const COL = 'fichas_tecnicas';     // coleção das fichas no Firestore
 const IMGCOL = 'fichas_tecnicas_img'; // imagens (base64) no Firestore — sem Storage/Blaze
+const USERS = 'app_users';         // cadastro de acessos (nome, status) gerido pelo master
+const LOG = 'fichas_tecnicas_log'; // histórico de alterações (quem mexeu em quê)
 
 let auth = null, fs = null, ready = false;
 const urlCache = new Map();
@@ -37,7 +39,10 @@ export function logout() { return auth ? auth.signOut() : Promise.resolve(); }
 export function currentEmail() { return auth && auth.currentUser ? auth.currentUser.email : null; }
 
 // ---- Controle de acessos (master cria logins) ----
+const emailKey = (e) => String(e || '').trim().toLowerCase();
 let _master = undefined; // undefined=não carregado, null=sem master ainda, string=email
+let _me = undefined;     // registro do usuário logado: {email,nome,status,master?} ou null
+
 export async function loadMaster() {
   initCloud();
   try { const d = await fs.collection('config').doc('app').get(); _master = d.exists ? (d.data().masterEmail || null) : null; }
@@ -56,16 +61,112 @@ export async function claimMaster() {
   if (!e) throw new Error('Faça login primeiro.');
   await fs.collection('config').doc('app').set({ masterEmail: e }, { merge: true });
   _master = e;
+  await loadMe();
   return e;
 }
-// Cria um login SEM deslogar o master (usa um app Firebase secundário).
-export async function createUser(email, senha) {
+
+// Carrega o registro do usuário logado (nome + status). Garante registro do master.
+export async function loadMe() {
+  initCloud();
+  const e = currentEmail();
+  if (!e) { _me = null; return null; }
+  if (_master === undefined) await loadMaster();
+  if (isMaster()) {
+    _me = { email: e, nome: 'Administrador', status: 'ativo', master: true };
+    try {
+      const ref = fs.collection(USERS).doc(emailKey(e));
+      const d = await ref.get();
+      if (!d.exists) await ref.set({ email: e, nome: 'Administrador', status: 'ativo', master: true, criadoEm: Date.now(), criadoPor: e });
+      else _me.nome = d.data().nome || _me.nome;
+    } catch (_) { /* ok */ }
+    return _me;
+  }
+  try { const d = await fs.collection(USERS).doc(emailKey(e)).get(); _me = d.exists ? { email: e, ...d.data() } : null; }
+  catch (_) { _me = null; }
+  return _me;
+}
+export const myName = () => (_me && _me.nome) || currentEmail() || '';
+
+// Decide se o usuário logado pode usar o app. {ok, reason}
+export function accessState() {
+  const e = currentEmail();
+  if (!e) return { ok: false, reason: 'no-auth' };
+  if (noMasterYet()) return { ok: true };            // bootstrap: ninguém é master ainda
+  if (isMaster()) return { ok: true };
+  if (!_me) return { ok: false, reason: 'not-registered' };
+  if (_me.status === 'bloqueado') return { ok: false, reason: 'blocked' };
+  return { ok: true };
+}
+export async function touchLastAccess() {
+  const e = currentEmail();
+  if (!e) return;
+  try { await fs.collection(USERS).doc(emailKey(e)).set({ ultimoAcesso: Date.now() }, { merge: true }); } catch (_) { /* ok */ }
+}
+
+// ---- Gestão de acessos (somente master) ----
+export async function listUsers() {
+  initCloud();
+  const s = await fs.collection(USERS).get();
+  return s.docs.map((d) => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => (b.master ? 1 : 0) - (a.master ? 1 : 0) || String(a.nome || '').localeCompare(String(b.nome || '')));
+}
+// Cria um login SEM deslogar o master (usa um app Firebase secundário) e grava o cadastro.
+export async function createUser(email, senha, nome) {
   initCloud();
   const fb = window.firebase;
   const sec = (fb.apps || []).find((a) => a.name === 'userCreator') || fb.initializeApp(CONFIG, 'userCreator');
   const cred = await sec.auth().createUserWithEmailAndPassword(email.trim(), senha);
   try { await sec.auth().signOut(); } catch (e) { /* ok */ }
+  await fs.collection(USERS).doc(emailKey(email)).set({
+    email: email.trim(), nome: (nome || '').trim() || email.trim().split('@')[0],
+    status: 'ativo', criadoEm: Date.now(), criadoPor: currentEmail() || '',
+  });
+  await logActivity('cadastrou acesso', null, `${(nome || email).trim()} (${email.trim()})`);
   return cred.user.email;
+}
+export async function setUserStatus(email, status) {
+  initCloud();
+  await fs.collection(USERS).doc(emailKey(email)).set({ status }, { merge: true });
+  await logActivity(status === 'bloqueado' ? 'bloqueou acesso' : 'desbloqueou acesso', null, email);
+}
+export async function renameUser(email, nome) {
+  initCloud();
+  await fs.collection(USERS).doc(emailKey(email)).set({ nome: (nome || '').trim() }, { merge: true });
+}
+export async function deleteUserRecord(email) {
+  initCloud();
+  await fs.collection(USERS).doc(emailKey(email)).delete();
+  await logActivity('removeu acesso', null, email);
+}
+
+// ---- Histórico de alterações ----
+export async function logActivity(acao, ficha, info = '') {
+  if (!ready || !auth || !auth.currentUser) return;
+  try {
+    await fs.collection(LOG).add({
+      ts: Date.now(),
+      email: currentEmail(),
+      nome: myName(),
+      acao,
+      fichaId: ficha ? (ficha.id || null) : null,
+      fichaRef: ficha && ficha.meta ? (ficha.meta.referencia || '') : '',
+      fichaNum: ficha && ficha.meta ? (ficha.meta.numero || '') : '',
+      info: info || '',
+    });
+  } catch (e) { console.warn('log', e); }
+}
+export async function listActivity(max = 250) {
+  initCloud();
+  const s = await fs.collection(LOG).orderBy('ts', 'desc').limit(max).get();
+  return s.docs.map((d) => d.data());
+}
+export async function clearActivityBefore(tsMillis) {
+  initCloud();
+  const s = await fs.collection(LOG).where('ts', '<', tsMillis).get();
+  const batch = fs.batch();
+  s.docs.forEach((d) => batch.delete(d.ref));
+  await batch.commit();
+  return s.size;
 }
 
 // ---- Fichas (Firestore) ----

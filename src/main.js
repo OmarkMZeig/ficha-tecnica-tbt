@@ -100,7 +100,7 @@ function openTemplatePicker() {
       const fic = tpl.build();
       fic.meta.tipo = tipo;
       fic.meta.numero = await nextFichaNumber(tipo);
-      await createNew(fic);
+      await createNew(fic, { log: true });
       switchView('editor');
       toast(`Nova ficha ${tipo === 'piloto' ? 'PILOTO' : 'de produção'} Nº ${fic.meta.numero}`, 'ok');
     };
@@ -239,8 +239,9 @@ function openCloudMenu() {
   const ehMaster = cloud.isMaster();
   const semMaster = cloud.noMasterYet();
   const body = el('div', { style: { display: 'flex', flexDirection: 'column', gap: '8px' } },
-    el('p', { class: 'hint' }, `Conectado como ${u && u.email}${ehMaster ? ' (MASTER)' : ''}. Modo: ${getMode() === 'cloud' ? 'NUVEM (compartilhado)' : 'LOCAL'}.`),
-    ehMaster ? bigBtn('👤  Gerenciar acessos (criar logins)', 'Crie logins para a equipe — cada um entra com a própria senha.', () => { m.close(); openManageUsers(); }) : null,
+    el('p', { class: 'hint' }, `Conectado como ${cloud.myName()} (${u && u.email})${ehMaster ? ' — MASTER' : ''}. Modo: ${getMode() === 'cloud' ? 'NUVEM (compartilhado)' : 'LOCAL'}.`),
+    ehMaster ? bigBtn('👤  Gerenciar acessos', 'Criar, renomear, bloquear ou excluir logins da equipe.', () => { m.close(); openManageUsers(); }) : null,
+    ehMaster ? bigBtn('📋  Histórico de alterações', 'Veja quem criou ou alterou cada ficha, com data e hora.', () => { m.close(); openActivityLog(); }) : null,
     (!ehMaster && semMaster) ? bigBtn('⭐  Definir minha conta como MASTER', 'Você passa a controlar quem cria/tem acesso.', async () => { m.close(); try { await cloud.claimMaster(); toast('Sua conta agora é a master', 'ok'); } catch (e) { toast(cloud.friendlyError(e), 'err'); } }) : null,
     getMode() !== 'cloud' ? bigBtn('☁  Usar a nuvem agora', 'Carrega as fichas compartilhadas da equipe.', async () => { m.close(); await enterCloud(); }) : null,
     bigBtn('💻  Voltar ao modo local', 'Usa só as fichas deste computador.', async () => { m.close(); await setBackendMode('local'); await reloadForMode(); updateCloudUI(); toast('Modo local', 'ok'); }),
@@ -250,35 +251,141 @@ function openCloudMenu() {
 }
 
 function openManageUsers() {
+  // --- formulário de criação ---
+  const nome = el('input', { type: 'text', placeholder: 'Nome da pessoa (ex.: Maria — Costura)', style: inputCss });
   const email = el('input', { type: 'email', placeholder: 'email@empresa.com', style: inputCss });
   const senha = el('input', { type: 'text', placeholder: 'Senha (mínimo 6 caracteres)', style: inputCss });
   const msg = el('div', { class: 'hint', style: { minHeight: '16px', marginTop: '6px' } });
-  const ok = el('button', { class: 'btn primary' }, 'Criar acesso');
-  const body = el('div', {},
-    el('p', { class: 'hint', style: { marginBottom: '10px' } }, 'Crie um login para alguém da equipe. A pessoa entra com este e-mail e senha (no botão ☁ Entrar) e acessa as fichas compartilhadas — sem precisar da sua credencial.'),
-    el('div', { class: 'field' }, el('label', { text: 'E-mail do novo acesso' }), email),
+  const ok = el('button', { class: 'btn primary', style: { marginTop: '8px' } }, '＋ Criar acesso');
+  const createBox = el('div', { style: { border: '1px solid var(--border)', borderRadius: '8px', padding: '12px', marginBottom: '14px' } },
+    el('div', { style: { fontWeight: '600', marginBottom: '8px' } }, 'Criar novo acesso'),
+    el('div', { class: 'field' }, el('label', { text: 'Nome' }), nome),
+    el('div', { class: 'field' }, el('label', { text: 'E-mail' }), email),
     el('div', { class: 'field' }, el('label', { text: 'Senha inicial' }), senha),
-    msg,
-    el('p', { class: 'hint', style: { marginTop: '8px' } }, 'Para remover um acesso ou redefinir senha, use o Firebase Console (Authentication).'));
-  const m = modal({ title: '👤 Gerenciar acessos', body, width: '440px', footer: [el('button', { class: 'btn ghost', onclick: () => m.close() }, 'Fechar'), ok] });
+    ok, msg);
+
+  // --- lista de acessos ---
+  const listBox = el('div', {}, el('div', { class: 'hint' }, 'Carregando acessos...'));
+  const body = el('div', {}, createBox,
+    el('div', { style: { fontWeight: '600', margin: '4px 0 8px' } }, 'Acessos cadastrados'), listBox);
+  const m = modal({ title: '👤 Gerenciar acessos', body, width: '560px', footer: [el('button', { class: 'btn ghost', onclick: () => m.close() }, 'Fechar')] });
+
+  const badge = (txt, color) => el('span', { style: { fontSize: '11px', fontWeight: '700', padding: '2px 7px', borderRadius: '999px', background: color, color: '#fff' } }, txt);
+  const smallBtn = (txt, on, danger) => el('button', { class: `btn ${danger ? 'danger' : 'ghost'} btn-sm`, style: { fontSize: '12px', padding: '4px 8px' }, onclick: on }, txt);
+
+  async function refresh() {
+    listBox.innerHTML = '';
+    let users = [];
+    try { users = await cloud.listUsers(); } catch (e) { listBox.append(el('div', { class: 'hint', style: { color: 'var(--danger)' } }, cloud.friendlyError(e))); return; }
+    if (!users.length) { listBox.append(el('div', { class: 'hint' }, 'Nenhum acesso cadastrado ainda. Crie o primeiro acima.')); return; }
+    for (const us of users) {
+      const blocked = us.status === 'bloqueado';
+      const row = el('div', { style: { display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 0', borderTop: '1px solid var(--border)' } });
+      const info = el('div', { style: { flex: '1', minWidth: '0' } },
+        el('div', { style: { fontWeight: '600', display: 'flex', gap: '6px', alignItems: 'center' } },
+          el('span', { text: us.nome || '(sem nome)' }),
+          us.master ? badge('MASTER', '#7a5cff') : (blocked ? badge('BLOQUEADO', '#c2410c') : badge('ativo', '#15803d'))),
+        el('div', { class: 'hint', style: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } },
+          `${us.email}${us.ultimoAcesso ? ' · último acesso ' + fmtDateTime(us.ultimoAcesso) : ''}`));
+      const acts = el('div', { style: { display: 'flex', gap: '6px', flexShrink: '0' } });
+      if (!us.master) {
+        acts.append(
+          smallBtn('✏ Renomear', async () => {
+            const novo = prompt('Novo nome para ' + us.email, us.nome || '');
+            if (novo == null) return;
+            await cloud.renameUser(us.email, novo); toast('Nome atualizado', 'ok'); refresh();
+          }),
+          smallBtn(blocked ? '✓ Desbloquear' : '⛔ Bloquear', async () => {
+            await cloud.setUserStatus(us.email, blocked ? 'ativo' : 'bloqueado');
+            toast(blocked ? 'Acesso liberado' : 'Acesso bloqueado', 'ok'); refresh();
+          }),
+          smallBtn('🗑 Excluir', async () => {
+            if (!(await confirmDialog(`Excluir o acesso de "${us.nome || us.email}"? A pessoa deixa de entrar nas fichas. (A credencial em si só é apagada no Firebase Console.)`, { okLabel: 'Excluir', danger: true }))) return;
+            await cloud.deleteUserRecord(us.email); toast('Acesso removido', 'ok'); refresh();
+          }, true));
+      }
+      row.append(info, acts);
+      listBox.append(row);
+    }
+  }
+
   ok.onclick = async () => {
-    const e = email.value.trim(); const s = senha.value;
-    if (!e || s.length < 6) { msg.textContent = 'Informe um e-mail e uma senha de pelo menos 6 caracteres.'; msg.style.color = 'var(--danger)'; return; }
+    const n = nome.value.trim(); const e = email.value.trim(); const s = senha.value;
+    if (!e || s.length < 6) { msg.style.color = 'var(--danger)'; msg.textContent = 'Informe e-mail e uma senha de pelo menos 6 caracteres.'; return; }
     ok.disabled = true; msg.style.color = 'var(--text-dim)'; msg.textContent = 'Criando...';
     try {
-      await cloud.createUser(e, s);
-      msg.style.color = 'var(--ok)'; msg.textContent = `✓ Acesso criado para ${e}. Já pode entrar.`;
-      email.value = ''; senha.value = ''; ok.disabled = false;
+      await cloud.createUser(e, s, n);
+      msg.style.color = 'var(--ok)'; msg.textContent = `✓ Acesso criado para ${n || e}. Já pode entrar com a própria senha.`;
+      nome.value = ''; email.value = ''; senha.value = ''; ok.disabled = false;
+      refresh();
     } catch (err) { msg.style.color = 'var(--danger)'; msg.textContent = cloud.friendlyError(err); ok.disabled = false; }
   };
-  setTimeout(() => email.focus(), 50);
+  refresh();
+  setTimeout(() => nome.focus(), 50);
+}
+
+function openActivityLog() {
+  const search = el('input', { type: 'text', placeholder: 'Filtrar por nome, ficha, ação...', style: inputCss });
+  const listBox = el('div', { style: { maxHeight: '52vh', overflow: 'auto', marginTop: '10px' } }, el('div', { class: 'hint' }, 'Carregando...'));
+  const reload = el('button', { class: 'btn ghost btn-sm' }, '↻ Atualizar');
+  const body = el('div', {},
+    el('p', { class: 'hint', style: { marginBottom: '8px' } }, 'Registro de quem criou ou alterou cada ficha. Atualizações contínuas numa mesma ficha são agrupadas.'),
+    el('div', { style: { display: 'flex', gap: '8px', alignItems: 'center' } }, el('div', { style: { flex: '1' } }, search), reload),
+    listBox);
+  const m = modal({ title: '📋 Histórico de alterações', body, width: '620px', footer: [el('button', { class: 'btn ghost', onclick: () => m.close() }, 'Fechar')] });
+
+  let all = [];
+  const verb = (a) => ({ criou: '🆕', editou: '✏️', duplicou: '📑', 'nova versão': '🔖', excluiu: '🗑️', 'cadastrou acesso': '👤', 'bloqueou acesso': '⛔', 'desbloqueou acesso': '✓', 'removeu acesso': '🚫' }[a] || '•');
+  function render() {
+    const q = search.value.trim().toLowerCase();
+    const rows = all.filter((r) => !q || `${r.nome} ${r.email} ${r.acao} ${r.fichaRef} ${r.fichaNum} ${r.info}`.toLowerCase().includes(q));
+    listBox.innerHTML = '';
+    if (!rows.length) { listBox.append(el('div', { class: 'hint' }, all.length ? 'Nenhum registro corresponde ao filtro.' : 'Ainda não há registros.')); return; }
+    for (const r of rows) {
+      const alvo = r.fichaNum || r.fichaRef ? `ficha ${r.fichaNum || ''}${r.fichaRef ? ' · ' + r.fichaRef : ''}` : (r.info || '');
+      listBox.append(el('div', { style: { display: 'flex', gap: '8px', padding: '7px 0', borderTop: '1px solid var(--border)', fontSize: '13px' } },
+        el('span', { style: { width: '20px', flexShrink: '0' }, text: verb(r.acao) }),
+        el('div', { style: { flex: '1', minWidth: '0' } },
+          el('div', {}, el('b', { text: r.nome || r.email || '—' }), ' ', el('span', { text: r.acao }), ' ', el('span', { class: 'hint', text: alvo })),
+          el('div', { class: 'hint' }, fmtDateTime(r.ts)))));
+    }
+  }
+  async function load() {
+    listBox.innerHTML = ''; listBox.append(el('div', { class: 'hint' }, 'Carregando...'));
+    try { all = await cloud.listActivity(300); render(); }
+    catch (e) { listBox.innerHTML = ''; listBox.append(el('div', { class: 'hint', style: { color: 'var(--danger)' } }, cloud.friendlyError(e))); }
+  }
+  search.addEventListener('input', render);
+  reload.onclick = load;
+  load();
+}
+
+function fmtDateTime(ms) {
+  try { return new Date(ms).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }); }
+  catch (_) { return ''; }
+}
+
+// Verifica se o usuário logado tem acesso liberado. Se não, desloga e volta ao local.
+async function gateAccess() {
+  await cloud.loadMaster().catch(() => {});
+  await cloud.loadMe().catch(() => {});
+  const st = cloud.accessState();
+  if (st.ok) { cloud.touchLastAccess().catch(() => {}); return true; }
+  const msg = st.reason === 'blocked' ? 'Seu acesso foi bloqueado pelo administrador.'
+    : st.reason === 'not-registered' ? 'Seu acesso ainda não foi liberado. Peça ao administrador para cadastrar seu login.'
+      : 'Acesso negado.';
+  toast(msg, 'err');
+  await cloud.logout();
+  if (getMode() === 'cloud') { await setBackendMode('local'); await reloadForMode(); }
+  updateCloudUI();
+  return false;
 }
 
 async function enterCloud() {
+  if (!(await gateAccess())) return;
   try {
     await setBackendMode('cloud');
     await reloadForMode();
-    await cloud.loadMaster().catch(() => {});
     updateCloudUI();
     toast('Conectado à nuvem — fichas compartilhadas', 'ok');
   } catch (e) { console.error(e); toast('Erro ao carregar nuvem: ' + (e.message || e), 'err'); }
@@ -448,7 +555,7 @@ async function init() {
   // Nuvem: reflete login e auto-entra se a preferência salva for "cloud"
   if (cloud.cloudAvailable()) {
     cloud.onAuth(async (user) => {
-      if (user) await cloud.loadMaster().catch(() => {});
+      if (user) { await cloud.loadMaster().catch(() => {}); await cloud.loadMe().catch(() => {}); }
       updateCloudUI();
       const pref = await db.getMeta('mode');
       if (user && pref === 'cloud' && getMode() !== 'cloud') await enterCloud();
