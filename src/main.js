@@ -262,7 +262,8 @@ function openManageUsers() {
     el('div', { class: 'field' }, el('label', { text: 'Nome' }), nome),
     el('div', { class: 'field' }, el('label', { text: 'E-mail' }), email),
     el('div', { class: 'field' }, el('label', { text: 'Senha inicial' }), senha),
-    ok, msg);
+    ok, msg,
+    el('p', { class: 'hint', style: { marginTop: '8px' } }, 'Se o e-mail já tiver login (criado antes), pode cadastrá-lo aqui mesmo assim — a senha é ignorada e ele passa a aparecer na lista com o nome informado.'));
 
   // --- lista de acessos ---
   const listBox = el('div', {}, el('div', { class: 'hint' }, 'Carregando acessos...'));
@@ -300,8 +301,8 @@ function openManageUsers() {
             toast(blocked ? 'Acesso liberado' : 'Acesso bloqueado', 'ok'); refresh();
           }),
           smallBtn('🗑 Excluir', async () => {
-            if (!(await confirmDialog(`Excluir o acesso de "${us.nome || us.email}"? A pessoa deixa de entrar nas fichas. (A credencial em si só é apagada no Firebase Console.)`, { okLabel: 'Excluir', danger: true }))) return;
-            await cloud.deleteUserRecord(us.email); toast('Acesso removido', 'ok'); refresh();
+            if (!(await confirmDialog(`Excluir "${us.nome || us.email}" da lista? Atenção: se a pessoa ainda souber a senha e entrar de novo, ela reaparece. Para impedir o acesso de vez, use BLOQUEAR.`, { okLabel: 'Excluir mesmo assim', danger: true }))) return;
+            await cloud.deleteUserRecord(us.email); toast('Removido da lista', 'ok'); refresh();
           }, true));
       }
       row.append(info, acts);
@@ -312,10 +313,13 @@ function openManageUsers() {
   ok.onclick = async () => {
     const n = nome.value.trim(); const e = email.value.trim(); const s = senha.value;
     if (!e || s.length < 6) { msg.style.color = 'var(--danger)'; msg.textContent = 'Informe e-mail e uma senha de pelo menos 6 caracteres.'; return; }
-    ok.disabled = true; msg.style.color = 'var(--text-dim)'; msg.textContent = 'Criando...';
+    ok.disabled = true; msg.style.color = 'var(--text-dim)'; msg.textContent = 'Salvando...';
     try {
-      await cloud.createUser(e, s, n);
-      msg.style.color = 'var(--ok)'; msg.textContent = `✓ Acesso criado para ${n || e}. Já pode entrar com a própria senha.`;
+      const r = await cloud.createUser(e, s, n);
+      msg.style.color = 'var(--ok)';
+      msg.textContent = r.created
+        ? `✓ Acesso criado para ${n || e}. Já pode entrar com a própria senha.`
+        : `✓ Login já existia — agora aparece na lista como ${n || e}.`;
       nome.value = ''; email.value = ''; senha.value = ''; ok.disabled = false;
       refresh();
     } catch (err) { msg.style.color = 'var(--danger)'; msg.textContent = cloud.friendlyError(err); ok.disabled = false; }

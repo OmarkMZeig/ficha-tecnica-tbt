@@ -81,20 +81,30 @@ export async function loadMe() {
     } catch (_) { /* ok */ }
     return _me;
   }
-  try { const d = await fs.collection(USERS).doc(emailKey(e)).get(); _me = d.exists ? { email: e, ...d.data() } : null; }
-  catch (_) { _me = null; }
+  // Auto-cadastro: quem entra e ainda não tem registro (ex.: logins criados antes
+  // desta versão) é registrado automaticamente como 'ativo' e passa a aparecer na
+  // lista. Não sobrescreve registro existente (um bloqueado continua bloqueado).
+  try {
+    const ref = fs.collection(USERS).doc(emailKey(e));
+    const d = await ref.get();
+    if (d.exists) { _me = { email: e, ...d.data() }; }
+    else {
+      const rec = { email: e, nome: e.split('@')[0], status: 'ativo', criadoEm: Date.now(), criadoPor: 'auto', auto: true };
+      try { await ref.set(rec); } catch (_) { /* sem permissão de escrita: segue assim mesmo */ }
+      _me = { email: e, ...rec };
+    }
+  } catch (_) { _me = { email: e, nome: e.split('@')[0], status: 'ativo' }; }
   return _me;
 }
 export const myName = () => (_me && _me.nome) || currentEmail() || '';
 
-// Decide se o usuário logado pode usar o app. {ok, reason}
+// Decide se o usuário logado pode usar o app. Só barra quem está BLOQUEADO
+// explicitamente — ninguém fica trancado por falta de registro.
 export function accessState() {
   const e = currentEmail();
   if (!e) return { ok: false, reason: 'no-auth' };
-  if (noMasterYet()) return { ok: true };            // bootstrap: ninguém é master ainda
   if (isMaster()) return { ok: true };
-  if (!_me) return { ok: false, reason: 'not-registered' };
-  if (_me.status === 'bloqueado') return { ok: false, reason: 'blocked' };
+  if (_me && _me.status === 'bloqueado') return { ok: false, reason: 'blocked' };
   return { ok: true };
 }
 export async function touchLastAccess() {
@@ -110,19 +120,28 @@ export async function listUsers() {
   return s.docs.map((d) => ({ id: d.id, ...d.data() }))
     .sort((a, b) => (b.master ? 1 : 0) - (a.master ? 1 : 0) || String(a.nome || '').localeCompare(String(b.nome || '')));
 }
-// Cria um login SEM deslogar o master (usa um app Firebase secundário) e grava o cadastro.
+// Cria/registra um login SEM deslogar o master (usa um app Firebase secundário).
+// Se o e-mail JÁ existe no Auth (ex.: login antigo), não recria — apenas grava o
+// cadastro na lista. Retorna { email, created }.
 export async function createUser(email, senha, nome) {
   initCloud();
   const fb = window.firebase;
-  const sec = (fb.apps || []).find((a) => a.name === 'userCreator') || fb.initializeApp(CONFIG, 'userCreator');
-  const cred = await sec.auth().createUserWithEmailAndPassword(email.trim(), senha);
-  try { await sec.auth().signOut(); } catch (e) { /* ok */ }
+  let created = false;
+  try {
+    const sec = (fb.apps || []).find((a) => a.name === 'userCreator') || fb.initializeApp(CONFIG, 'userCreator');
+    await sec.auth().createUserWithEmailAndPassword(email.trim(), senha);
+    try { await sec.auth().signOut(); } catch (e) { /* ok */ }
+    created = true;
+  } catch (err) {
+    if (!(err && err.code && String(err.code).includes('email-already-in-use'))) throw err;
+    // já existe no Auth → segue para só registrar/atualizar o cadastro
+  }
   await fs.collection(USERS).doc(emailKey(email)).set({
     email: email.trim(), nome: (nome || '').trim() || email.trim().split('@')[0],
     status: 'ativo', criadoEm: Date.now(), criadoPor: currentEmail() || '',
-  });
-  await logActivity('cadastrou acesso', null, `${(nome || email).trim()} (${email.trim()})`);
-  return cred.user.email;
+  }, { merge: true });
+  await logActivity(created ? 'cadastrou acesso' : 'registrou acesso existente', null, `${(nome || email).trim()} (${email.trim()})`);
+  return { email: email.trim(), created };
 }
 export async function setUserStatus(email, status) {
   initCloud();
