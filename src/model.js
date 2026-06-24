@@ -1,7 +1,7 @@
 // Modelo de dados da ficha tecnica + definicoes das tabelas.
 // Estrutura inspirada na ficha real de jeans (Razon/TBT): cabecalho denso em
 // 2 blocos (tecido/linha/pesponto + produto/grade) e medidas ANTES/DEPOIS de lavar.
-import { uuid, isoDate, brDate } from './util.js';
+import { uuid, isoDate, brDate } from './util.js?v=16';
 
 export const CATEGORIAS = [
   'Calça Jeans', 'Calça Sarja', 'Bermuda Jeans', 'Bermuda Sarja',

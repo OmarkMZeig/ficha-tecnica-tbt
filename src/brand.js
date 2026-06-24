@@ -1,6 +1,6 @@
 // Identidade da marca: wordmark #TBT em SVG (vetorial) e suporte a logo
 // customizado (PNG/JPG enviado pelo usuario, recortado automaticamente).
-import * as db from './db.js';
+import * as db from './db.js?v=16';
 
 // Wordmark "#TBT": cerquilha desenhada (rects) + "TBT" em fonte pesada universal.
 export function tbtWordmark(color = 'currentColor', height = 28) {

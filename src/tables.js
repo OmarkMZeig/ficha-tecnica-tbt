@@ -1,9 +1,9 @@
 // Tabelas editaveis: edicao inline, inserir/excluir/reordenar linhas,
 // e colar dados direto do Excel (TSV).
-import { el, $$, toast } from './util.js';
-import { store, commit, touch } from './store.js';
-import { TABLE_DEFS, emptyRow } from './model.js';
-import { blockTitle, sectionClass, rowEye, rowHiddenClass } from './blocks.js';
+import { el, $$, toast } from './util.js?v=16';
+import { store, commit, touch } from './store.js?v=16';
+import { TABLE_DEFS, emptyRow } from './model.js?v=16';
+import { blockTitle, sectionClass, rowEye, rowHiddenClass } from './blocks.js?v=16';
 
 export function tableSection(tableKey, { compact = false } = {}) {
   const sec = el('section', { class: 'tbl-section', dataset: { table: tableKey } });

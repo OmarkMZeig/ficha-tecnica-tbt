@@ -1,8 +1,8 @@
 // Painel direito contextual: propriedades do objeto selecionado OU da ficha.
-import { el } from './util.js';
-import { store, touch, addImageFromFile, imageUrl } from './store.js';
-import { CATEGORIAS, STROKE_COLORS, FONTS } from './model.js';
-import * as canvas from './canvas.js';
+import { el } from './util.js?v=16';
+import { store, touch, addImageFromFile, imageUrl } from './store.js?v=16';
+import { CATEGORIAS, STROKE_COLORS, FONTS } from './model.js?v=16';
+import * as canvas from './canvas.js?v=16';
 
 let root = null;
 export function initInspector(element) { root = element; showFicha(); }

@@ -1,9 +1,9 @@
 // Prancheta de desenho: objetos posicionados livremente (imagens, marcacoes,
 // caixas de texto, numeros) com mover / redimensionar / girar.
 // Modelo unificado: todo objeto e um bbox { x, y, w, h, rot }.
-import { el, clamp, escapeHtml, toast } from './util.js';
-import { store, commit, touch, imageUrl } from './store.js';
-import { newObject } from './model.js';
+import { el, clamp, escapeHtml, toast } from './util.js?v=16';
+import { store, commit, touch, imageUrl } from './store.js?v=16';
+import { newObject } from './model.js?v=16';
 
 let boardEl = null;
 let tool = 'select';

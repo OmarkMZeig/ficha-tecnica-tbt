@@ -1,21 +1,21 @@
 // Bootstrap e orquestracao geral do aplicativo.
-import { el, toast, modal, confirmDialog, $, $$ } from './util.js';
-import * as db from './db.js';
-import { newFicha, emptyRows, newSpecs } from './model.js';
-import { TEMPLATES } from './templates.js';
+import { el, toast, modal, confirmDialog, $, $$ } from './util.js?v=16';
+import * as db from './db.js?v=16';
+import { newFicha, emptyRows, newSpecs } from './model.js?v=16';
+import { TEMPLATES } from './templates.js?v=16';
 import {
   store, subscribe, createNew, loadById, listFichas, saveNow, commit,
   duplicateCurrent, newVersionCurrent, addImageFromFile, imageUrl, setCurrent,
   getMode, setBackendMode, nextFichaNumber,
-} from './store.js';
-import * as cloud from './cloud.js';
-import { renderPage } from './ficha.js';
-import * as canvas from './canvas.js';
-import { initInspector, showSelection } from './inspector.js';
-import { initLibrary, refreshLibrary } from './library.js';
-import { exportPDF, exportImage, exportFichaFile, importFichaFile } from './export.js';
-import { loadBrandLogo, setBrandLogo, brandLogoEl, brandLogo } from './brand.js';
-import { readFileAsDataURL } from './util.js';
+} from './store.js?v=16';
+import * as cloud from './cloud.js?v=16';
+import { renderPage } from './ficha.js?v=16';
+import * as canvas from './canvas.js?v=16';
+import { initInspector, showSelection } from './inspector.js?v=16';
+import { initLibrary, refreshLibrary } from './library.js?v=16';
+import { exportPDF, exportImage, exportFichaFile, importFichaFile } from './export.js?v=16';
+import { loadBrandLogo, setBrandLogo, brandLogoEl, brandLogo } from './brand.js?v=16';
+import { readFileAsDataURL } from './util.js?v=16';
 
 const pageEl = $('#page');
 const boardSel = '.drawing-board';

@@ -1,12 +1,12 @@
 // Renderiza o documento A4 completo, no padrao de uma ficha de jeans:
 // cabecalho denso em 2 blocos + grade + desenho + medidas (antes/depois) +
 // aviamentos/materiais/custos + observacoes + revisoes + assinaturas + rodape.
-import { el, brDate, isoDate } from './util.js';
-import { store, touch, commit } from './store.js';
-import { tableSection } from './tables.js';
-import { measuresSection, refreshMeasures } from './measures.js';
-import { brandLogoEl } from './brand.js';
-import { blockTitle, sectionClass, rowEye, rowHiddenClass } from './blocks.js';
+import { el, brDate, isoDate } from './util.js?v=16';
+import { store, touch, commit } from './store.js?v=16';
+import { tableSection } from './tables.js?v=16';
+import { measuresSection, refreshMeasures } from './measures.js?v=16';
+import { brandLogoEl } from './brand.js?v=16';
+import { blockTitle, sectionClass, rowEye, rowHiddenClass } from './blocks.js?v=16';
 
 export function renderPage(pageEl) {
   const f = store.current;

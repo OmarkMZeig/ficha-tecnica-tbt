@@ -1,8 +1,8 @@
 // Banco de produtos: lista pesquisavel + selecao multipla p/ impressao em lote.
-import { el, brDate, confirmDialog, toast } from './util.js';
-import { listFichas, removeFicha } from './store.js';
-import { printFichas } from './export.js';
-import { CATEGORIAS } from './model.js';
+import { el, brDate, confirmDialog, toast } from './util.js?v=16';
+import { listFichas, removeFicha } from './store.js?v=16';
+import { printFichas } from './export.js?v=16';
+import { CATEGORIAS } from './model.js?v=16';
 
 let libEl = null;
 let onOpen = () => {};

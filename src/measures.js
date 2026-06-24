@@ -1,8 +1,8 @@
 // Grade de medidas ANTES / DEPOIS de lavar (padrao jeans).
 // Colunas = tamanhos (de store.current.grade.sizes); linhas = pontos de medida.
-import { el } from './util.js';
-import { store, commit, touch } from './store.js';
-import { blockTitle, sectionClass, rowEye, rowHiddenClass } from './blocks.js';
+import { el } from './util.js?v=16';
+import { store, commit, touch } from './store.js?v=16';
+import { blockTitle, sectionClass, rowEye, rowHiddenClass } from './blocks.js?v=16';
 
 export function measuresSection() {
   const sec = el('section', { class: 'measures-section', dataset: { measures: '1' } });
