@@ -29,6 +29,7 @@ Rewrite $idx { param($t)
   $t = [regex]::Replace($t, "(src/main\.js)(\?v=\d+)?", "`$1?v=$new")
   $t = [regex]::Replace($t, "(styles/[A-Za-z0-9_\-]+\.css)(\?v=\d+)?", "`$1?v=$new")
   $t = [regex]::Replace($t, "(vendor/html-to-image\.js)(\?v=\d+)?", "`$1?v=$new")
+  $t = [regex]::Replace($t, "(assets/favicon\.svg)(\?v=\d+)?", "`$1?v=$new")
   $t
 } | Out-Null
 

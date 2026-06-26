@@ -18,8 +18,9 @@ body { background: var(--bg-app); color: var(--text); overflow: hidden; }
   display: grid; place-items: center; color: #fff; font-size: 13px; font-weight: 800;
 }
 .brand small { color: var(--text-dim); font-weight: 500; font-size: 11px; }
-.brand-logo { display: inline-flex; align-items: center; height: 22px; }
+.brand-logo { display: inline-flex; align-items: center; height: 30px; }
 .brand-logo svg { display: block; }
+.brand > div { white-space: nowrap; }
 
 .topbar .ficha-id {
   display: flex; flex-direction: column; line-height: 1.15; margin-left: 6px;

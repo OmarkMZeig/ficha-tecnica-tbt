@@ -1,6 +1,6 @@
 // Identidade da marca: wordmark #TBT em SVG (vetorial) e suporte a logo
 // customizado (PNG/JPG enviado pelo usuario, recortado automaticamente).
-import * as db from './db.js?v=16';
+import * as db from './db.js?v=17';
 
 // Wordmark "#TBT": cerquilha desenhada (rects) + "TBT" em fonte pesada universal.
 export function tbtWordmark(color = 'currentColor', height = 28) {
@@ -13,6 +13,32 @@ export function tbtWordmark(color = 'currentColor', height = 28) {
   <rect x="3"  y="38" width="63" height="9"  rx="1"/>
   <text x="80" y="49" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="56" letter-spacing="-1">TBT</text>
 </svg>`;
+}
+
+// Emblema do APP "Ficha Técnica": cartão de ficha + pesponto tracejado (a costura
+// icônica do jeans, em laranja) + barra de título e régua de medidas (azul técnico),
+// sobre azul-denim. Usado no favicon e na topbar (o #TBT segue na ficha impressa).
+export function fichaLogoSVG(size = 30) {
+  return `<svg viewBox="0 0 64 64" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ficha Técnica TBT">
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="#243a73"/>
+  <rect x="15" y="11" width="34" height="42" rx="5" fill="#ffffff"/>
+  <rect x="19" y="15" width="26" height="34" rx="3" fill="none" stroke="#e0651f" stroke-width="1.6" stroke-dasharray="2.8 2.6" stroke-linecap="round"/>
+  <rect x="23" y="20" width="18" height="3.6" rx="1.8" fill="#2f6fed"/>
+  <rect x="23" y="28" width="18" height="2.3" rx="1.15" fill="#ccd0da"/>
+  <rect x="23" y="32.6" width="12" height="2.3" rx="1.15" fill="#ccd0da"/>
+  <rect x="24" y="40" width="1.3" height="3" rx="0.5" fill="#2f6fed"/>
+  <rect x="29" y="40" width="1.3" height="3" rx="0.5" fill="#2f6fed"/>
+  <rect x="34" y="40" width="1.3" height="3" rx="0.5" fill="#2f6fed"/>
+  <rect x="39" y="40" width="1.3" height="3" rx="0.5" fill="#2f6fed"/>
+  <rect x="23" y="43" width="18" height="1.5" rx="0.7" fill="#2f6fed"/>
+</svg>`;
+}
+export function fichaLogoEl(size = 30) {
+  const span = document.createElement('span');
+  span.style.display = 'inline-flex';
+  span.style.alignItems = 'center';
+  span.innerHTML = fichaLogoSVG(size);
+  return span;
 }
 
 let _custom = undefined; // dataURL ou null

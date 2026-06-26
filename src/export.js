@@ -1,10 +1,10 @@
 // Exportacao: PDF (impressao nativa = fidelidade total), PNG/JPG (html-to-image),
 // e backup/compartilhamento em JSON (ficha + imagens embutidas).
-import { download, slug, toast, el } from './util.js?v=16';
-import { store, imagesAsDataURLs, addImageFromFile, createNew, fetchFicha, setCurrentSilent, setCurrent } from './store.js?v=16';
-import { newFicha } from './model.js?v=16';
-import { renderPage } from './ficha.js?v=16';
-import * as canvas from './canvas.js?v=16';
+import { download, slug, toast, el } from './util.js?v=17';
+import { store, imagesAsDataURLs, addImageFromFile, createNew, fetchFicha, setCurrentSilent, setCurrent } from './store.js?v=17';
+import { newFicha } from './model.js?v=17';
+import { renderPage } from './ficha.js?v=17';
+import * as canvas from './canvas.js?v=17';
 
 const pageEl = () => document.getElementById('page');
 
