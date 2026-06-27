@@ -1,7 +1,7 @@
 // Titulo de bloco com botao de OCULTAR (modo invisibilidade p/ fornecedor).
 // Blocos ocultos: aparecem esmaecidos no editor, mas somem na impressao/exportacao.
-import { el } from './util.js?v=17';
-import { store, commit } from './store.js?v=17';
+import { el } from './util.js?v=18';
+import { store, commit } from './store.js?v=18';
 
 export const isHidden = (mod) => !!(store.current && store.current.hidden && store.current.hidden[mod]);
 export const sectionClass = (base, mod) => base + (isHidden(mod) ? ' mod-hidden' : '');

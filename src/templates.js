@@ -1,6 +1,6 @@
 // Templates de fabrica + exemplo preenchido (reproduz a ficha de referencia).
-import { newFicha, emptyRow } from './model.js?v=17';
-import { uuid } from './util.js?v=17';
+import { newFicha, emptyRow } from './model.js?v=18';
+import { uuid } from './util.js?v=18';
 
 const rows = (tableKey, list) => list.map((data) => ({ ...emptyRow(tableKey), ...data }));
 const sizes6 = ['36', '38', '40', '42', '44', '46'];

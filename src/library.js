@@ -1,8 +1,8 @@
 // Banco de produtos: lista pesquisavel + selecao multipla p/ impressao em lote.
-import { el, brDate, confirmDialog, toast } from './util.js?v=17';
-import { listFichas, removeFicha } from './store.js?v=17';
-import { printFichas } from './export.js?v=17';
-import { CATEGORIAS } from './model.js?v=17';
+import { el, brDate, confirmDialog, toast } from './util.js?v=18';
+import { listFichas, removeFicha } from './store.js?v=18';
+import { printFichas } from './export.js?v=18';
+import { CATEGORIAS } from './model.js?v=18';
 
 let libEl = null;
 let onOpen = () => {};
@@ -92,6 +92,7 @@ function card(f) {
   else thumb.textContent = '👕';
 
   const tags = el('div', { class: 'tags' });
+  if (f.meta.oc) tags.append(el('span', { class: 'tag tag-oc', text: 'OC ' + f.meta.oc }));
   if (f.meta.numero) tags.append(el('span', { class: 'tag', style: { background: 'var(--accent-soft)', color: '#fff' }, text: 'Nº ' + f.meta.numero }));
   if (f.meta.categoria) tags.append(el('span', { class: 'tag', text: f.meta.categoria }));
   if (f.meta.marca) tags.append(el('span', { class: 'tag', text: f.meta.marca }));

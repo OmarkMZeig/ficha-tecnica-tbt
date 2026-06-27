@@ -1,21 +1,21 @@
 // Bootstrap e orquestracao geral do aplicativo.
-import { el, toast, modal, confirmDialog, $, $$ } from './util.js?v=17';
-import * as db from './db.js?v=17';
-import { newFicha, emptyRows, newSpecs } from './model.js?v=17';
-import { TEMPLATES } from './templates.js?v=17';
+import { el, toast, modal, confirmDialog, $, $$ } from './util.js?v=18';
+import * as db from './db.js?v=18';
+import { newFicha, emptyRows, newSpecs } from './model.js?v=18';
+import { TEMPLATES } from './templates.js?v=18';
 import {
   store, subscribe, createNew, loadById, listFichas, saveNow, commit,
   duplicateCurrent, newVersionCurrent, addImageFromFile, imageUrl, setCurrent,
   getMode, setBackendMode, nextFichaNumber,
-} from './store.js?v=17';
-import * as cloud from './cloud.js?v=17';
-import { renderPage } from './ficha.js?v=17';
-import * as canvas from './canvas.js?v=17';
-import { initInspector, showSelection } from './inspector.js?v=17';
-import { initLibrary, refreshLibrary } from './library.js?v=17';
-import { exportPDF, exportImage, exportFichaFile, importFichaFile } from './export.js?v=17';
-import { loadBrandLogo, setBrandLogo, brandLogoEl, brandLogo, fichaLogoEl } from './brand.js?v=17';
-import { readFileAsDataURL } from './util.js?v=17';
+} from './store.js?v=18';
+import * as cloud from './cloud.js?v=18';
+import { renderPage } from './ficha.js?v=18';
+import * as canvas from './canvas.js?v=18';
+import { initInspector, showSelection } from './inspector.js?v=18';
+import { initLibrary, refreshLibrary } from './library.js?v=18';
+import { exportPDF, exportImage, exportFichaFile, importFichaFile } from './export.js?v=18';
+import { loadBrandLogo, setBrandLogo, brandLogoEl, brandLogo, fichaLogoEl } from './brand.js?v=18';
+import { readFileAsDataURL } from './util.js?v=18';
 
 const pageEl = $('#page');
 const boardSel = '.drawing-board';
@@ -433,6 +433,25 @@ function applyTopbarLogo() {
   if (slot) { slot.innerHTML = ''; slot.append(fichaLogoEl(30)); }
 }
 
+// Alça para recolher/abrir o painel direito (propriedades/categoria).
+// No celular o painel vira uma gaveta sobreposta e começa recolhido.
+function setupInspectorToggle() {
+  const ws = $('#workspace');
+  if (!ws || $('#inspToggle')) return;
+  const btn = el('button', { id: 'inspToggle', class: 'insp-toggle', title: 'Mostrar/ocultar painel de propriedades' });
+  const sync = () => { btn.innerHTML = ws.classList.contains('insp-collapsed') ? '‹' : '›'; };
+  btn.onclick = () => { ws.classList.toggle('insp-collapsed'); sync(); };
+  ws.append(btn);
+  if (window.matchMedia('(max-width: 760px)').matches) ws.classList.add('insp-collapsed');
+  sync();
+}
+// No celular, ao selecionar um objeto, abre a gaveta automaticamente.
+function autoOpenInspectorOnMobile(hasSelection) {
+  if (!hasSelection) return;
+  const ws = $('#workspace');
+  if (ws && window.matchMedia('(max-width: 760px)').matches) { ws.classList.remove('insp-collapsed'); const b = $('#inspToggle'); if (b) b.innerHTML = '›'; }
+}
+
 async function saveAsTemplate() {
   const f = JSON.parse(JSON.stringify(store.current));
   f.meta.referencia = ''; f.meta.codigoInterno = ''; f.board.objects = [];
@@ -518,7 +537,7 @@ function wireKeyboard() {
 function onStoreChange(f, reason) {
   if (reason !== 'load') return; // edicoes pontuais nao re-renderizam tudo
   renderPage(pageEl);
-  canvas.mountBoard(pageEl.querySelector(boardSel), { onSelect: (o) => showSelection(o) });
+  canvas.mountBoard(pageEl.querySelector(boardSel), { onSelect: (o) => { showSelection(o); autoOpenInspectorOnMobile(!!o); } });
   showSelection(null);
 }
 
@@ -536,6 +555,7 @@ async function init() {
   await loadBrandLogo();
   applyTopbarLogo();
   initInspector($('#inspector'));
+  setupInspectorToggle();
   initLibrary($('#library'), { open: async (id) => { await loadById(id); switchView('editor'); } });
   wireImageImport();
   wireKeyboard();

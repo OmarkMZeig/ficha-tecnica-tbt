@@ -1,9 +1,9 @@
 // Estado central + persistência via "backend" plugável (local OU nuvem).
 // A UI não muda: sempre lê store.current e chama as mesmas funções.
-import * as db from './db.js?v=17';
-import * as cloud from './cloud.js?v=17';
-import { newFicha, ensureShape } from './model.js?v=17';
-import { uuid, debounce, isoDate } from './util.js?v=17';
+import * as db from './db.js?v=18';
+import * as cloud from './cloud.js?v=18';
+import { newFicha, ensureShape } from './model.js?v=18';
+import { uuid, debounce, isoDate } from './util.js?v=18';
 
 const listeners = new Set();
 let current = null;
